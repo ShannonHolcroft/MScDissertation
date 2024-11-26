@@ -385,21 +385,48 @@ corA3mat = melt(corA3mat)
 
 ggplot(corA1mat, aes(x = Var1, y = Var2, fill = value)) +
   geom_tile(color = "black") +
-  theme(axis.text.y = element_text(size=7), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 7, angle = 90, family = "Arial"),
+        axis.text.y = element_text(size = 7, family = "Arial"),
+        legend.text = element_text(size = 7, family = "Arial"),
+        legend.title = element_blank()) +
   scale_fill_gradient2(low = "#075AFF",
                        mid = "white",
                        high = "#FF0000") + coord_fixed()
 
 ggplot(corA2mat, aes(x = Var1, y = Var2, fill = value)) +
   geom_tile(color = "black") +
-  theme(axis.text.y = element_text(size=7), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 7, angle = 90, family = "Arial"),
+        axis.text.y = element_text(size = 7, family = "Arial"),
+        legend.text = element_text(size = 7, family = "Arial"),
+        legend.title = element_blank()) +
   scale_fill_gradient2(low = "#075AFF",
                        mid = "white",
                        high = "#FF0000") + coord_fixed()
+
 ggplot(corA3mat, aes(x = Var1, y = Var2, fill = value)) +
   geom_tile(color = "black") +
-  theme(axis.text.y = element_text(size=7), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 7, angle = 90, family = "Arial"),
+        axis.text.y = element_text(size = 7, family = "Arial"),
+        legend.text = element_text(size = 7, family = "Arial"),
+        legend.title = element_blank()) +
   scale_fill_gradient2(low = "#075AFF",
                        mid = "white",
                        high = "#FF0000") + coord_fixed()
+
+# Spaghetti plots of Group A outcomes
+
+ggplot(data = groupA, aes(x = factor(Time, levels = c("56", "112", "365")), y = O24, group = ID)) + 
+  geom_line() + stat_summary(aes(group = 1), fun.y = mean, geom = "line", shape = 17, size = 1, color = "#075AFF") +
+  xlab("\n Time") + ylab(paste0(varA[24], "\n")) + theme_bw() + 
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial")) + facet_wrap(~`Treatment`)
 
