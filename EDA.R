@@ -349,7 +349,7 @@ varB = varB[-(1:7)]
 
 # Separate data by outcome; removing GrL+ responses and infrequently observed outcomes
 
-outA = groupA[, -c(1:17, 26, 27, 28, 44, 49, 54)]
+outA = groupA[, -c(1:17, 26, 27, 28, 44, 49, 54, 57)]
 colnames(outA) = varA
 outB = groupB[, c(23:34)]
 colnames(outB) = varB
@@ -362,21 +362,21 @@ corA = cbind('Time' = groupA$`Time`, outA)
 
 corA_visit1 = corA[corA$Time == 56, ]
 corA_visit1 = corA_visit1[complete.cases(corA_visit1), ]
-corA_visit1 = as.matrix(corA_visit1[, -c(1,35)])
+corA_visit1 = as.matrix(corA_visit1[, -c(1)])
 
 corA1mat = cor(corA_visit1, method = "spearman")
 corA1mat = melt(corA1mat)
 
 corA_visit2 = corA[corA$Time == 112, ]
 corA_visit2 = corA_visit2[complete.cases(corA_visit2), ]
-corA_visit2 = as.matrix(corA_visit2[, -c(1, 35)])
+corA_visit2 = as.matrix(corA_visit2[, -c(1)])
 
 corA2mat = cor(corA_visit2, method = "spearman")
 corA2mat = melt(corA2mat)
 
 corA_visit3 = corA[corA$Time == 365, ]
 corA_visit3 = corA_visit3[complete.cases(corA_visit3), ]
-corA_visit3 = as.matrix(corA_visit3[, -c(1, 35)])
+corA_visit3 = as.matrix(corA_visit3[, -c(1)])
 
 corA3mat = cor(corA_visit3, method = "spearman")
 corA3mat = melt(corA3mat)
@@ -430,3 +430,31 @@ ggplot(data = groupA, aes(x = factor(Time, levels = c("56", "112", "365")), y = 
         axis.text.y = element_text(size = 10, family = "Arial"),
         legend.text = element_text(size = 10, family = "Arial")) + facet_wrap(~`Treatment`)
 
+dev.off()
+
+# Plot histograms of immune outcome measurements
+
+# Set up the grid
+
+par(mfrow = c(4, 4))
+
+histA = vector("list", length = 33)
+
+
+for (i in 1:33) {
+  input = as.numeric(unlist(outA[, i]))
+  d = hist(input, xlab = "", main = paste0(varA[i]))
+  histA[[i]] = d
+}
+
+# Group B
+
+par(mfrow = c(4, 3))
+
+histB = vector("list", length = 12)
+
+for (i in 1:12) {
+  input = as.numeric(unlist(outB[, i]))
+  d = hist(input, xlab = "", main = paste0(varB[i]))
+  histB[[i]] = d
+}
