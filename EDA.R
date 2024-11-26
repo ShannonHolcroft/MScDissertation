@@ -1,5 +1,58 @@
 # Load packages
 
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+
+# Read in group data
+
+groupA = read_xlsx("data/groupAinfantsData_AD_23Feb2023.xlsx")
+varA = colnames(groupA[, 17:56])
+
+groupB = read_xlsx("data/groupBinfantsData_AD_23Feb2023.xlsx")
+varB = colnames(groupB[, 16:34])
+
+# Change variable names
+
+## Study design and covariates
+
+colnames(groupA)[1:4] = c("ID", "Group", "Time", "Treatment")
+groupA$Time = as.factor(groupA$Time)
+colnames(groupA)[10] = c("QFT")
+colnames(groupA)[12:13] = c("Feeding", "Antibiotic")
+
+colnames(groupB)[1:4] =  c("ID", "Group", "Time", "Treatment")
+groupB$Time = as.factor(groupB$Time)
+colnames(groupB)[10] = c("QFT")
+colnames(groupB)[12:13] = c("Feeding", "Antibiotic")
+
+# Create new dummy variables for feeding and antibiotic
+
+groupA$FA = ifelse(groupA$Feeding == "Breast Milk" & groupA$Antibiotic == "Yes", 3, ifelse(groupA$Feeding == "Breast Milk" & groupA$Antibiotic == "No", 2, ifelse(groupA$Feeding == "Formula" & groupA$Antibiotic == "No", 1, 0)))
+groupA$FA = factor(groupA$FA)
+
+groupB$FA = ifelse(groupB$Feeding == "Breast Milk" & groupB$Antibiotic == "Y", 3, ifelse(groupB$Feeding == "Breast Milk" & groupB$Antibiotic == "N", 2, ifelse(groupB$Feeding == "Formula" & groupB$Antibiotic == "N", 1, 0)))
+groupB$FA = factor(groupB$FA)
+
+## Create immune response data sets
+
+# Rename by number
+
+groupA = rename_with(.data = groupA, .fn = ~ paste0("O", 1:length(varA)), .cols = 17:56)
+groupB = rename_with(.data = groupB, .fn = ~ paste0("O", 1:length(varB)), .cols = 16:34)
+
+# Drop indeterminate QFT observations
+indet_idsA = groupA[which(groupA$QFT == "Indeterminate"), ]$ID
+indet_idsB = groupB[which(groupB$QFT == "Indeterminate"), ]$ID
+
+groupA = groupA[-which(groupA$ID %in% indet_idsA), ]
+groupB = groupB[-which(groupB$ID %in% indet_idsB), ]
+
+
+
+
+# Load packages
+
 library(xtable)
 library(kableExtra)
 library(dplyr)
@@ -281,3 +334,72 @@ fant_B = table(groupB$Feeding, groupB$Antibiotic)
 fisher.test(x = fant_B)
 
 # Evidence of dependence in Group A but not Group B - supports combined VOI (FA)
+
+# Change labels for plotting
+
+varA[8] = "%CD8+ ANYcytok+"
+varA[14:21] = c("Bulk CD4+ %R7-RA+", "Bulk CD4+ %R7+RA+", "Bulk CD4+ %R7+RA-", "Bulk CD4+ %R7-RA-",
+                "Bulk CD8+ %R7-RA+", "Bulk CD8+ %R7+RA+", "Bulk CD8+ %R7+RA-", "Bulk CD8+ %R7-RA-")
+
+varA = varA[-c(1, 10, 11, 12, 28, 33, 38)]
+
+varB[5:16] =  c("%CD16+ PMN", "%CD14+ Mono", "%CD19+ B", "%CD3+ T", "%CD56+ NKTlike", "%CD8+ T",     
+                "%HLA-DR+ CD8+ T", "%CD4+ T", "%HLA-DR+ CD4+ T", "%gd TCR+",  "%HLA-DR+ gd T",  "%totNK")
+varB = varB[-(1:7)]
+
+# Separate data by outcome; removing GrL+ responses and infrequently observed outcomes
+
+outA = groupA[, -c(1:17, 26, 27, 28, 44, 49, 54)]
+colnames(outA) = varA
+outB = groupB[, c(23:34)]
+colnames(outB) = varB
+
+# Correlations
+
+# Group A
+
+corA = cbind('Time' = groupA$`Time`, outA)
+
+corA_visit1 = corA[corA$Time == 56, ]
+corA_visit1 = corA_visit1[complete.cases(corA_visit1), ]
+corA_visit1 = as.matrix(corA_visit1[, -c(1,35)])
+
+corA1mat = cor(corA_visit1, method = "spearman")
+corA1mat = melt(corA1mat)
+
+corA_visit2 = corA[corA$Time == 112, ]
+corA_visit2 = corA_visit2[complete.cases(corA_visit2), ]
+corA_visit2 = as.matrix(corA_visit2[, -c(1, 35)])
+
+corA2mat = cor(corA_visit2, method = "spearman")
+corA2mat = melt(corA2mat)
+
+corA_visit3 = corA[corA$Time == 365, ]
+corA_visit3 = corA_visit3[complete.cases(corA_visit3), ]
+corA_visit3 = as.matrix(corA_visit3[, -c(1, 35)])
+
+corA3mat = cor(corA_visit3, method = "spearman")
+corA3mat = melt(corA3mat)
+
+# Heatmap of all Group A outcomes on Days
+
+ggplot(corA1mat, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile(color = "black") +
+  theme(axis.text.y = element_text(size=7), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  scale_fill_gradient2(low = "#075AFF",
+                       mid = "white",
+                       high = "#FF0000") + coord_fixed()
+
+ggplot(corA2mat, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile(color = "black") +
+  theme(axis.text.y = element_text(size=7), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  scale_fill_gradient2(low = "#075AFF",
+                       mid = "white",
+                       high = "#FF0000") + coord_fixed()
+ggplot(corA3mat, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile(color = "black") +
+  theme(axis.text.y = element_text(size=7), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  scale_fill_gradient2(low = "#075AFF",
+                       mid = "white",
+                       high = "#FF0000") + coord_fixed()
+
