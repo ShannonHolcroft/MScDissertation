@@ -1,0 +1,207 @@
+---
+title: "Longitudinal Modelling Examples"
+output: html_notebook
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+
+# Load packages
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+library(reshape2)
+library(glmmTMB)
+library(lqmm)
+library(MASS)
+library(DHARMa)
+options(scipen = 999)
+
+# Read in group data
+
+groupA = read_xlsx("data/groupAinfantsData_AD_23Feb2023.xlsx")
+varA = colnames(groupA[, 17:56])
+
+groupB = read_xlsx("data/groupBinfantsData_AD_23Feb2023.xlsx")
+varB = colnames(groupB[, 16:34])
+
+# Change variable names
+
+## Study design and covariates
+
+colnames(groupA)[1:4] = c("ID", "Group", "Time", "Treatment")
+groupA$Time = as.factor(groupA$Time)
+colnames(groupA)[10] = c("QFT")
+colnames(groupA)[12:13] = c("Feeding", "Antibiotic")
+
+colnames(groupB)[1:4] =  c("ID", "Group", "Time", "Treatment")
+groupB$Time = as.factor(groupB$Time)
+colnames(groupB)[10] = c("QFT")
+colnames(groupB)[12:13] = c("Feeding", "Antibiotic")
+
+# Create new dummy variables for feeding and antibiotic
+
+groupA$FA = ifelse(groupA$Feeding == "Breast Milk" & groupA$Antibiotic == "Yes", 3, ifelse(groupA$Feeding == "Breast Milk" & groupA$Antibiotic == "No", 2, ifelse(groupA$Feeding == "Formula" & groupA$Antibiotic == "No", 1, 0)))
+groupA$FA = factor(groupA$FA)
+
+groupB$FA = ifelse(groupB$Feeding == "Breast Milk" & groupB$Antibiotic == "Y", 3, ifelse(groupB$Feeding == "Breast Milk" & groupB$Antibiotic == "N", 2, ifelse(groupB$Feeding == "Formula" & groupB$Antibiotic == "N", 1, 0)))
+groupB$FA = factor(groupB$FA)
+
+## Create immune response data sets
+
+# Rename by number
+
+groupA = rename_with(.data = groupA, .fn = ~ paste0("O", 1:length(varA)), .cols = 17:56)
+groupB = rename_with(.data = groupB, .fn = ~ paste0("O", 1:length(varB)), .cols = 16:34)
+
+# Drop indeterminate QFT observations
+indet_idsA = groupA[which(groupA$QFT == "Indeterminate"), ]$ID
+indet_idsB = groupB[which(groupB$QFT == "Indeterminate"), ]$ID
+
+groupA = groupA[-which(groupA$ID %in% indet_idsA), ]
+groupB = groupB[-which(groupB$ID %in% indet_idsB), ]
+
+```
+
+**%CD4+ totIL22+**: 
+```{r Outcome6, include=TRUE}
+l = varA[6]
+k = 6
+
+# Fit models
+
+# LMM
+
+AM_0.1 = glmmTMB(O6 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
+AS_0.1 = summary(AM_0.1)
+
+
+AM_0.2 = glmmTMB(O6 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
+AS_0.2 = summary(AM_0.2)
+
+# Formula, antibiotic is ref for breastfeeding, antibiotic (3)
+# Formula, antibiotic is ref for formula, no antibiotic (1)
+
+AM_0.3 = glmmTMB(O6 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
+AS_0.3 = summary(AM_0.3)
+
+# GLMM
+
+AM_1.1 = glmmTMB(O6 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_1.1 = summary(AM_1.1)
+
+
+AM_1.2 = glmmTMB(O6 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_1.2 = summary(AM_1.2)
+
+AM_1.3 = glmmTMB(O6 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_1.3 = summary(AM_1.3)
+
+# LQMM
+
+AM_2.1 = lqmm(fixed = O6 ~ Treatment*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AS_2.1 = summary(AM_2.1)
+
+
+AM_2.2 = glmmTMB(fixed = O6 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AS_2.2 = summary(AM_2.2)
+
+AM_2.3 = glmmTMB(O6 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_2.3 = summary(AM_2.3)
+
+```
+
+**Bulk CD4+/% R7+RA+:**: 
+```{r Outcome15, include=TRUE}
+l = varA[15]
+k = 15
+
+# Fit models
+
+# LMM
+
+AM_0.1 = glmmTMB(94 - O15 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
+AS_0.1 = summary(AM_0.1)
+
+
+AM_0.2 = glmmTMB(94 - O15 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
+AS_0.2 = summary(AM_0.2)
+
+# Formula, antibiotic is ref for breastfeeding, antibiotic (3)
+# Formula, antibiotic is ref for formula, no antibiotic (1)
+
+AM_0.3 = glmmTMB(94 - O15 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
+AS_0.3 = summary(AM_0.3)
+
+# GLMM
+
+AM_1.1 = glmmTMB(94 - O15 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.1 = summary(AM_1.1)
+
+
+AM_1.2 = glmmTMB(94 - O15 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.2 = summary(AM_1.2)
+
+AM_1.3 = glmmTMB(94 - O15 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.3 = summary(AM_1.3)
+
+# LQMM
+
+AM_2.1 = lqmm(fixed = 94 - O15 ~ Treatment*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AS_2.1 = summary(AM_2.1)
+
+
+AM_2.2 = glmmTMB(fixed = 94 - O15 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AS_2.2 = summary(AM_2.2)
+
+AM_2.3 = glmmTMB(fixed = 94 - O15 ~ FA*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AS_2.3 = summary(AM_2.3)
+
+```
+
+**GrK+ %of Ki67+ NK:** 
+
+```{r Outcome39, include=TRUE}
+l = varA[39]
+k = 39
+
+# Fit models
+
+# LMM
+
+AM_0.1 = glmmTMB(O39 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
+AS_0.1 = summary(AM_0.1)
+
+
+AM_0.2 = glmmTMB(O39 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
+AS_0.2 = summary(AM_0.2)
+
+# Formula, antibiotic is ref for breastfeeding, antibiotic (3)
+# Formula, antibiotic is ref for formula, no antibiotic (1)
+
+AM_0.3 = glmmTMB(O39 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
+AS_0.3 = summary(AM_0.3)
+
+# GLMM
+
+AM_1.1 = glmmTMB(O39 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_1.1 = summary(AM_1.1)
+
+
+AM_1.2 = glmmTMB(O39 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_1.2 = summary(AM_1.2)
+
+AM_1.3 = glmmTMB(O39 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_1.3 = summary(AM_1.3)
+
+# LQMM
+
+AM_2.1 = lqmm(fixed = O39 ~ Treatment*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AS_2.1 = summary(AM_2.1)
+
+AM_2.2 = glmmTMB(fixed = O39 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AS_2.2 = summary(AM_2.2)
+
+AM_2.3 = glmmTMB(fixed = O39 ~ FA*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AS_2.3 = summary(AM_2.3)
