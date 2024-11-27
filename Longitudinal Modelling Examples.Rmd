@@ -138,6 +138,10 @@ qqline(R1.3$cond$ID$`(Intercept)`)
 AM_2.1 = lqmm(fixed = O6 ~ Treatment*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.1 = summary(AM_2.1)
 
+R2.1 = ranef(AM_2.1)
+qqnorm(R2.1$`(Intercept)`, main = "")
+qqline(R2.1$`(Intercept)`)
+
 
 AM_2.2 = lqmm(fixed = O6 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.2 = summary(AM_2.2)
@@ -224,6 +228,10 @@ qqline(R1.3$cond$ID$`(Intercept)`)
 AM_2.1 = lqmm(fixed = 94 - O15 ~ Treatment*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.1 = summary(AM_2.1)
 
+R2.1 = ranef(AM_2.1)
+qqnorm(R2.1$`(Intercept)`, main = "")
+qqline(R2.1$`(Intercept)`)
+
 
 AM_2.2 = lqmm(fixed = 94 - O15 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.2 = summary(AM_2.2)
@@ -308,6 +316,10 @@ qqline(R1.3$cond$ID$`(Intercept)`)
 
 AM_2.1 = lqmm(fixed = O39 ~ Treatment*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.1 = summary(AM_2.1)
+
+R2.1 = ranef(AM_2.1)
+qqnorm(R2.1$`(Intercept)`, main = "")
+qqline(R2.1$`(Intercept)`)
 
 AM_2.2 = lqmm(fixed = O39 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.2 = summary(AM_2.2)
