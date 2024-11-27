@@ -62,6 +62,19 @@ indet_idsB = groupB[which(groupB$QFT == "Indeterminate"), ]$ID
 groupA = groupA[-which(groupA$ID %in% indet_idsA), ]
 groupB = groupB[-which(groupB$ID %in% indet_idsB), ]
 
+# Labels and labeller function for plotting
+
+groupnames = list(
+  '0'="Formula & Cotrimoxazole",
+  '1'="Formula & No Cotrimoxazole",
+  '2'="Breastfeeding & No Cotrimoxazole",
+  '3'="Breastfeeding & Cotrimoxazole"
+)
+
+labeller = function(variable,value){
+  return(groupnames[value])
+}
+
 ```
 
 **%CD4+ totIL22+**: 
@@ -118,12 +131,114 @@ R1.1 = ranef(AM_1.1)
 qqnorm(R1.1$cond$ID$`(Intercept)`, main = "")
 qqline(R1.1$cond$ID$`(Intercept)`)
 
+plot(simulateResiduals(AM_1.1, n = 1000))
+
+# Treatment
+
+pred_v1frame = AM_1.1$frame
+
+pred_v1 = predict(AM_1.1, type = "cond")
+pred_v1dat = data.frame(ID = pred_v1frame$ID, Time = as.character(pred_v1frame$Time), 
+                        MVA85A = as.character(pred_v1frame$Treatment),
+                        Sex = as.character(pred_v1frame$Gender), O = pred_v1frame$O6, P = pred_v1)
+
+
+mean_by_v1_pred = pred_v1dat %>% group_by(Time, MVA85A) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v1_observed = pred_v1dat %>% group_by(Time, MVA85A) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+mean_by_v1_predG = pred_v1dat %>% group_by(Time, Sex, MVA85A) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v1_observedG = pred_v1dat %>% group_by(Time, Sex, MVA85A) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+
+meanvec = c(mean_by_v1_pred$meanP, mean_by_v1_observed$meanO)
+statusvec = c(rep("Predicted", 6), rep("Observed", 6))
+sevec = c(mean_by_v1_pred$seP, mean_by_v1_observed$seO)
+daysvec = c(mean_by_v1_pred$Time, mean_by_v1_observed$Time)
+varvec = c(mean_by_v1_pred$MVA85A, mean_by_v1_observed$MVA85A)
+
+v1df = data.frame(Status = statusvec, Time = daysvec, Mean = meanvec, SEL = meanvec - sevec, SEU = meanvec + sevec, Variable = varvec)
+v1df$Time = factor(v1df$Time, levels = c("56", "112", "365"))
+
+ggplot(v1df, aes(x = Time, y = Mean, color = factor(Variable), linetype = Status)) +
+  ylim(0, 0.2) +
+  geom_point(aes(x = Time, y = Mean, color = factor(Variable))) +
+  geom_line(aes(x = Time, y = Mean, color = factor(Variable), group = interaction(Variable, Status)), linewidth = 0.8) +
+  scale_colour_manual(name = "Priming", labels = c("Control", "MVA85A"),
+                      breaks = c("Control", "MVA85A"),
+                      values = c("orange", "firebrick")) +
+  scale_linetype_manual(name = "Mean",
+                        values = c("Observed" = "solid", "Predicted" = "dashed"),  # Define line types for each level of Status
+                        labels = c("Observed" = "Empirical", "Predicted" = "Conditional (GLMM Prediction)")) +  # Set custom labels
+  #values = c("Control" = "darkslategrey", "MVA85A" = "firebrick")) +  # Adjust colors for clarity
+  theme_bw() + xlab("\n Time (Days After Birth)") + ylab(paste0("Mean ", varA[6], " \n")) + labs(title = "") + 
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
+
 AM_1.2 = glmmTMB(O6 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
 AS_1.2 = summary(AM_1.2)
 
 R1.2 = ranef(AM_1.2)
 qqnorm(R1.2$cond$ID$`(Intercept)`, main = "")
 qqline(R1.2$cond$ID$`(Intercept)`)
+
+plot(simulateResiduals(AM_1.2, n = 1000))
+
+# QFT
+
+pred_v2frame = AM_1.2$frame
+
+pred_v2 = predict(AM_1.2, type = "cond")
+pred_v2dat = data.frame(ID = pred_v2frame$ID, Time = as.character(pred_v2frame$Time), 
+                        QFT = as.character(pred_v2frame$QFT),
+                        Sex = as.character(pred_v2frame$Gender), O = pred_v2frame$O6, P = pred_v2)
+
+
+mean_by_v2_pred = pred_v2dat %>% group_by(Time, QFT) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v2_observed = pred_v2dat %>% group_by(Time, QFT) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+mean_by_v2_predG = pred_v2dat %>% group_by(Time, Sex, QFT) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v2_observedG = pred_v2dat %>% group_by(Time, Sex, QFT) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+
+meanvec = c(mean_by_v2_pred$meanP, mean_by_v2_observed$meanO)
+statusvec = c(rep("Predicted", 6), rep("Observed", 6))
+sevec = c(mean_by_v2_pred$seP, mean_by_v2_observed$seO)
+daysvec = c(mean_by_v2_pred$Time, mean_by_v2_observed$Time)
+varvec = c(mean_by_v2_pred$QFT, mean_by_v2_observed$QFT)
+
+v2df = data.frame(Status = statusvec, Time = daysvec, Mean = meanvec, SEL = meanvec - sevec, SEU = meanvec + sevec, Variable = varvec)
+v2df$Time = factor(v2df$Time, levels = c("56", "112", "365"))
+
+ggplot(v2df, aes(x = Time, y = Mean, color = factor(Variable), linetype = Status)) +
+  ylim(0, 0.2) +
+  geom_point(aes(x = Time, y = Mean, color = factor(Variable))) +
+  geom_line(aes(x = Time, y = Mean, color = factor(Variable), group = interaction(Variable, Status)), linewidth = 0.8) +
+  scale_colour_manual(name = "Maternal QFT", labels = c("Negative", "Positive"),
+                      breaks = c("Negative", "Positive"),
+                      values = c("darkcyan", "darkblue")) +
+  scale_linetype_manual(name = "Mean",
+                        values = c("Observed" = "solid", "Predicted" = "dashed"),  # Define line types for each level of Status
+                        labels = c("Observed" = "Empirical", "Predicted" = "Conditional (GLMM Prediction)")) +  # Set custom labels
+  #values = c("Control" = "darkslategrey", "MVA85A" = "firebrick")) +  # Adjust colors for clarity
+  theme_bw() + xlab("\n Time (Days After Birth)") + ylab(paste0("Mean ", varA[6], " \n")) + labs(title = "") + 
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
 
 AM_1.3 = glmmTMB(O6 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
 AS_1.3 = summary(AM_1.3)
@@ -132,6 +247,57 @@ R1.3 = ranef(AM_1.3)
 qqnorm(R1.3$cond$ID$`(Intercept)`, main = "")
 qqline(R1.3$cond$ID$`(Intercept)`)
 
+plot(simulateResiduals(AM_1.3, n = 1000))
+
+# FA
+
+pred_v3frame = AM_1.3$frame
+
+pred_v3 = predict(AM_1.3, type = "cond")
+pred_v3dat = data.frame(ID = pred_v3frame$ID, Time = as.character(pred_v3frame$Time), 
+                        FA = as.character(pred_v3frame$FA),
+                        Sex = as.character(pred_v3frame$Gender), O = pred_v3frame$O6, P = pred_v3)
+
+
+mean_by_v3_pred = pred_v3dat %>% group_by(Time, FA) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v3_observed = pred_v3dat %>% group_by(Time, FA) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+mean_by_v3_predG = pred_v3dat %>% group_by(Time, Sex, FA) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v3_observedG = pred_v3dat %>% group_by(Time, Sex, FA) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+
+meanvec = c(mean_by_v3_pred$meanP, mean_by_v3_observed$meanO)
+statusvec = c(rep("Predicted", 12), rep("Observed", 12))
+sevec = c(mean_by_v3_pred$seP, mean_by_v3_observed$seO)
+daysvec = c(mean_by_v3_pred$Time, mean_by_v3_observed$Time)
+varvec = c(mean_by_v3_pred$FA, mean_by_v3_observed$FA)
+
+v3df = data.frame(Status = statusvec, Time = daysvec, Mean = meanvec, SEL = meanvec - sevec, SEU = meanvec + sevec, Variable = varvec)
+v3df$Time = factor(v3df$Time, levels = c("56", "112", "365"))
+v3df =  v3df %>% filter(Variable %in% c("3", "2"))
+
+ggplot(v3df, aes(x = Time, y = Mean, color = factor(Variable), linetype = Status)) +
+  ylim(0, 0.2) +
+  geom_point(aes(x = Time, y = Mean, color = factor(Variable))) +
+  geom_line(aes(x = Time, y = Mean, color = factor(Variable), group = interaction(Variable, Status)), linewidth = 0.8) +
+  scale_colour_manual(name = "Feeding", labels = c("No Cotrimoxazole", "Cotrimoxazole"),
+                      breaks = c("3", "2"),
+                      values = c("chartreuse3", "darkgreen")) +
+  scale_linetype_manual(name = "Mean",
+                        values = c("Observed" = "solid", "Predicted" = "dashed"),  # Define line types for each level of Status
+                        labels = c("Observed" = "Empirical", "Predicted" = "Conditional (GLMM Prediction)")) +  # Set custom labels
+  #values = c("Control" = "darkslategrey", "MVA85A" = "firebrick")) +  # Adjust colors for clarity
+  theme_bw() + xlab("\n Time (Days After Birth)") + ylab(paste0("Mean ", varA[6], " \n")) + labs(title = "") + 
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
 
 # LQMM
 
@@ -146,8 +312,16 @@ qqline(R2.1$`(Intercept)`)
 AM_2.2 = lqmm(fixed = O6 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.2 = summary(AM_2.2)
 
+R2.2 = ranef(AM_2.2)
+qqnorm(R2.2$`(Intercept)`, main = "")
+qqline(R2.2$`(Intercept)`)
+
 AM_2.3 = lqmm(fixed = O6 ~ FA*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.3 = summary(AM_2.3)
+
+R2.3 = ranef(AM_2.3)
+qqnorm(R2.3$`(Intercept)`, main = "")
+qqline(R2.3$`(Intercept)`)
 
 ```
 
@@ -206,6 +380,58 @@ R1.1 = ranef(AM_1.1)
 qqnorm(R1.1$cond$ID$`(Intercept)`, main = "")
 qqline(R1.1$cond$ID$`(Intercept)`)
 
+plot(simulateResiduals(AM_1.1, n = 1000))
+
+# Treatment
+
+pred_v1frame = AM_1.1$frame
+
+pred_v1 = predict(AM_1.1, type = "cond")
+pred_v1dat = data.frame(ID = pred_v1frame$ID, Time = as.character(pred_v1frame$Time), 
+                        MVA85A = as.character(pred_v1frame$Treatment),
+                        Sex = as.character(pred_v1frame$Gender), O = 94 - pred_v1frame$`94 - O15`, P = 94 - pred_v1)
+
+
+mean_by_v1_pred = pred_v1dat %>% group_by(Time, MVA85A) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v1_observed = pred_v1dat %>% group_by(Time, MVA85A) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+mean_by_v1_predG = pred_v1dat %>% group_by(Time, Sex, MVA85A) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v1_observedG = pred_v1dat %>% group_by(Time, Sex, MVA85A) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+
+meanvec = c(mean_by_v1_pred$meanP, mean_by_v1_observed$meanO)
+statusvec = c(rep("Predicted", 6), rep("Observed", 6))
+sevec = c(mean_by_v1_pred$seP, mean_by_v1_observed$seO)
+daysvec = c(mean_by_v1_pred$Time, mean_by_v1_observed$Time)
+varvec = c(mean_by_v1_pred$MVA85A, mean_by_v1_observed$MVA85A)
+
+v1df = data.frame(Status = statusvec, Time = daysvec, Mean = meanvec, SEL = meanvec - sevec, SEU = meanvec + sevec, Variable = varvec)
+v1df$Time = factor(v1df$Time, levels = c("56", "112", "365"))
+
+ggplot(v1df, aes(x = Time, y = Mean, color = factor(Variable), linetype = Status)) +
+  ylim(50, 100) +
+  geom_point(aes(x = Time, y = Mean, color = factor(Variable))) +
+  geom_line(aes(x = Time, y = Mean, color = factor(Variable), group = interaction(Variable, Status)), linewidth = 0.8) +
+  scale_colour_manual(name = "Priming", labels = c("Control", "MVA85A"),
+                      breaks = c("Control", "MVA85A"),
+                      values = c("orange", "firebrick")) +
+  scale_linetype_manual(name = "Mean",
+                        values = c("Observed" = "solid", "Predicted" = "dashed"),  # Define line types for each level of Status
+                        labels = c("Observed" = "Empirical", "Predicted" = "Conditional (GLMM Prediction)")) +  # Set custom labels
+  #values = c("Control" = "darkslategrey", "MVA85A" = "firebrick")) +  # Adjust colors for clarity
+  theme_bw() + xlab("\n Time (Days After Birth)") + ylab(paste0("Mean ", varA[15], " \n")) + labs(title = "") + 
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
+
+
 
 AM_1.2 = glmmTMB(94 - O15 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_1.2 = summary(AM_1.2)
@@ -214,6 +440,56 @@ R1.2 = ranef(AM_1.2)
 qqnorm(R1.2$cond$ID$`(Intercept)`, main = "")
 qqline(R1.2$cond$ID$`(Intercept)`)
 
+plot(simulateResiduals(AM_1.2, n = 1000))
+
+pred_v2frame = AM_1.2$frame
+
+pred_v2 = predict(AM_1.2, type = "cond")
+pred_v2dat = data.frame(ID = pred_v2frame$ID, Time = as.character(pred_v2frame$Time), 
+                        QFT = as.character(pred_v2frame$QFT),
+                        Sex = as.character(pred_v2frame$Gender), O = 94 - pred_v2frame$`94 - O15`, P = 94 - pred_v2)
+
+
+mean_by_v2_pred = pred_v2dat %>% group_by(Time, QFT) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v2_observed = pred_v2dat %>% group_by(Time, QFT) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+mean_by_v2_predG = pred_v2dat %>% group_by(Time, Sex, QFT) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v2_observedG = pred_v2dat %>% group_by(Time, Sex, QFT) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+
+meanvec = c(mean_by_v2_pred$meanP, mean_by_v2_observed$meanO)
+statusvec = c(rep("Predicted", 6), rep("Observed", 6))
+sevec = c(mean_by_v2_pred$seP, mean_by_v2_observed$seO)
+daysvec = c(mean_by_v2_pred$Time, mean_by_v2_observed$Time)
+varvec = c(mean_by_v2_pred$QFT, mean_by_v2_observed$QFT)
+
+v2df = data.frame(Status = statusvec, Time = daysvec, Mean = meanvec, SEL = meanvec - sevec, SEU = meanvec + sevec, Variable = varvec)
+v2df$Time = factor(v2df$Time, levels = c("56", "112", "365"))
+
+ggplot(v2df, aes(x = Time, y = Mean, color = factor(Variable), linetype = Status)) +
+  ylim(50, 100) +
+  geom_point(aes(x = Time, y = Mean, color = factor(Variable))) +
+  geom_line(aes(x = Time, y = Mean, color = factor(Variable), group = interaction(Variable, Status)), linewidth = 0.8) +
+  scale_colour_manual(name = "Maternal QFT", labels = c("Negative", "Positive"),
+                      breaks = c("Negative", "Positive"),
+                      values = c("darkcyan", "darkblue")) +
+  scale_linetype_manual(name = "Mean",
+                        values = c("Observed" = "solid", "Predicted" = "dashed"),  # Define line types for each level of Status
+                        labels = c("Observed" = "Empirical", "Predicted" = "Conditional (GLMM Prediction)")) +  # Set custom labels
+  #values = c("Control" = "darkslategrey", "MVA85A" = "firebrick")) +  # Adjust colors for clarity
+  theme_bw() + xlab("\n Time (Days After Birth)") + ylab(paste0("Mean ", varA[15], " \n")) + labs(title = "") + 
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
+
+
 
 AM_1.3 = glmmTMB(94 - O15 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_1.3 = summary(AM_1.3)
@@ -221,6 +497,60 @@ AS_1.3 = summary(AM_1.3)
 R1.3 = ranef(AM_1.3)
 qqnorm(R1.3$cond$ID$`(Intercept)`, main = "")
 qqline(R1.3$cond$ID$`(Intercept)`)
+
+plot(simulateResiduals(AM_1.3, n = 1000))
+
+# FA
+
+pred_v3frame = AM_1.3$frame
+
+pred_v3 = predict(AM_1.3, type = "cond")
+pred_v3dat = data.frame(ID = pred_v3frame$ID, Time = as.character(pred_v3frame$Time), 
+                        FA = as.character(pred_v3frame$FA),
+                        Sex = as.character(pred_v3frame$Gender), O = 94 - pred_v3frame$`94 - O15`, P = 94 - pred_v3)
+
+
+mean_by_v3_pred = pred_v3dat %>% group_by(Time, FA) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v3_observed = pred_v3dat %>% group_by(Time, FA) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+mean_by_v3_predG = pred_v3dat %>% group_by(Time, Sex, FA) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v3_observedG = pred_v3dat %>% group_by(Time, Sex, FA) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+
+meanvec = c(mean_by_v3_pred$meanP, mean_by_v3_observed$meanO)
+statusvec = c(rep("Predicted", 12), rep("Observed", 12))
+sevec = c(mean_by_v3_pred$seP, mean_by_v3_observed$seO)
+daysvec = c(mean_by_v3_pred$Time, mean_by_v3_observed$Time)
+varvec = c(mean_by_v3_pred$FA, mean_by_v3_observed$FA)
+
+v3df = data.frame(Status = statusvec, Time = daysvec, Mean = meanvec, SEL = meanvec - sevec, SEU = meanvec + sevec, Variable = varvec)
+v3df$Time = factor(v3df$Time, levels = c("56", "112", "365"))
+v3df =  v3df %>% filter(Variable %in% c("3", "2"))
+
+ggplot(v3df, aes(x = Time, y = Mean, color = factor(Variable), linetype = Status)) +
+  ylim(50, 100) +
+  geom_point(aes(x = Time, y = Mean, color = factor(Variable))) +
+  geom_line(aes(x = Time, y = Mean, color = factor(Variable), group = interaction(Variable, Status)), linewidth = 0.8) +
+  scale_colour_manual(name = "Feeding", labels = c("No Cotrimoxazole", "Cotrimoxazole"),
+                      breaks = c("3", "2"),
+                      values = c("chartreuse3", "darkgreen")) +
+  scale_linetype_manual(name = "Mean",
+                        values = c("Observed" = "solid", "Predicted" = "dashed"),  # Define line types for each level of Status
+                        labels = c("Observed" = "Empirical", "Predicted" = "Conditional (GLMM Prediction)")) +  # Set custom labels
+  #values = c("Control" = "darkslategrey", "MVA85A" = "firebrick")) +  # Adjust colors for clarity
+  theme_bw() + xlab("\n Time (Days After Birth)") + ylab(paste0("Mean ", varA[15], " \n")) + labs(title = "") + 
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
+
+# LQMM
 
 
 # LQMM
@@ -236,8 +566,17 @@ qqline(R2.1$`(Intercept)`)
 AM_2.2 = lqmm(fixed = 94 - O15 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.2 = summary(AM_2.2)
 
+R2.2 = ranef(AM_2.2)
+qqnorm(R2.2$`(Intercept)`, main = "")
+qqline(R2.2$`(Intercept)`)
+
 AM_2.3 = lqmm(fixed = 94 - O15 ~ FA*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.3 = summary(AM_2.3)
+
+R2.3 = ranef(AM_2.3)
+qqnorm(R2.3$`(Intercept)`, main = "")
+qqline(R2.3$`(Intercept)`)
+
 
 ```
 
@@ -290,27 +629,179 @@ qqline(Rs0.3)
 
 # GLMM
 
-AM_1.1 = glmmTMB(O39 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AM_1.1 = glmmTMB(O39 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_1.1 = summary(AM_1.1)
 
 R1.1 = ranef(AM_1.1)
 qqnorm(R1.1$cond$ID$`(Intercept)`, main = "")
 qqline(R1.1$cond$ID$`(Intercept)`)
 
-AM_1.2 = glmmTMB(O39 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+plot(simulateResiduals(AM_1.1, n = 1000))
+
+# Treatment
+
+pred_v1frame = AM_1.1$frame
+
+pred_v1 = predict(AM_1.1, type = "cond")
+pred_v1dat = data.frame(ID = pred_v1frame$ID, Time = as.character(pred_v1frame$Time), 
+                        MVA85A = as.character(pred_v1frame$Treatment),
+                        Sex = as.character(pred_v1frame$Gender), O = pred_v1frame$O39, P = pred_v1)
+
+
+mean_by_v1_pred = pred_v1dat %>% group_by(Time, MVA85A) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v1_observed = pred_v1dat %>% group_by(Time, MVA85A) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+mean_by_v1_predG = pred_v1dat %>% group_by(Time, Sex, MVA85A) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v1_observedG = pred_v1dat %>% group_by(Time, Sex, MVA85A) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+
+meanvec = c(mean_by_v1_pred$meanP, mean_by_v1_observed$meanO)
+statusvec = c(rep("Predicted", 6), rep("Observed", 6))
+sevec = c(mean_by_v1_pred$seP, mean_by_v1_observed$seO)
+daysvec = c(mean_by_v1_pred$Time, mean_by_v1_observed$Time)
+varvec = c(mean_by_v1_pred$MVA85A, mean_by_v1_observed$MVA85A)
+
+v1df = data.frame(Status = statusvec, Time = daysvec, Mean = meanvec, SEL = meanvec - sevec, SEU = meanvec + sevec, Variable = varvec)
+v1df$Time = factor(v1df$Time, levels = c("56", "112", "365"))
+
+ggplot(v1df, aes(x = Time, y = Mean, color = factor(Variable), linetype = Status)) +
+  ylim(0, 100) +
+  geom_point(aes(x = Time, y = Mean, color = factor(Variable))) +
+  geom_line(aes(x = Time, y = Mean, color = factor(Variable), group = interaction(Variable, Status)), linewidth = 0.8) +
+  scale_colour_manual(name = "Priming", labels = c("Control", "MVA85A"),
+                      breaks = c("Control", "MVA85A"),
+                      values = c("orange", "firebrick")) +
+  scale_linetype_manual(name = "Mean",
+                        values = c("Observed" = "solid", "Predicted" = "dashed"),  # Define line types for each level of Status
+                        labels = c("Observed" = "Empirical", "Predicted" = "Conditional (GLMM Prediction)")) +  # Set custom labels
+  #values = c("Control" = "darkslategrey", "MVA85A" = "firebrick")) +  # Adjust colors for clarity
+  theme_bw() + xlab("\n Time (Days After Birth)") + ylab(paste0("Mean ", varA[39], " \n")) + labs(title = "") + 
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
+
+
+AM_1.2 = glmmTMB(O39 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_1.2 = summary(AM_1.2)
 
 R1.2 = ranef(AM_1.2)
 qqnorm(R1.2$cond$ID$`(Intercept)`, main = "")
 qqline(R1.2$cond$ID$`(Intercept)`)
 
+plot(simulateResiduals(AM_1.2, n = 1000))
 
-AM_1.3 = glmmTMB(O39 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+pred_v2frame = AM_1.2$frame
+
+pred_v2 = predict(AM_1.2, type = "cond")
+pred_v2dat = data.frame(ID = pred_v2frame$ID, Time = as.character(pred_v2frame$Time), 
+                        QFT = as.character(pred_v2frame$QFT),
+                        Sex = as.character(pred_v2frame$Gender), O = pred_v2frame$O39, P = pred_v2)
+
+
+mean_by_v2_pred = pred_v2dat %>% group_by(Time, QFT) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v2_observed = pred_v2dat %>% group_by(Time, QFT) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+mean_by_v2_predG = pred_v2dat %>% group_by(Time, Sex, QFT) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v2_observedG = pred_v2dat %>% group_by(Time, Sex, QFT) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+
+meanvec = c(mean_by_v2_pred$meanP, mean_by_v2_observed$meanO)
+statusvec = c(rep("Predicted", 6), rep("Observed", 6))
+sevec = c(mean_by_v2_pred$seP, mean_by_v2_observed$seO)
+daysvec = c(mean_by_v2_pred$Time, mean_by_v2_observed$Time)
+varvec = c(mean_by_v2_pred$QFT, mean_by_v2_observed$QFT)
+
+v2df = data.frame(Status = statusvec, Time = daysvec, Mean = meanvec, SEL = meanvec - sevec, SEU = meanvec + sevec, Variable = varvec)
+v2df$Time = factor(v2df$Time, levels = c("56", "112", "365"))
+
+ggplot(v2df, aes(x = Time, y = Mean, color = factor(Variable), linetype = Status)) +
+  ylim(0, 100) +
+  geom_point(aes(x = Time, y = Mean, color = factor(Variable))) +
+  geom_line(aes(x = Time, y = Mean, color = factor(Variable), group = interaction(Variable, Status)), linewidth = 0.8) +
+  scale_colour_manual(name = "Maternal QFT", labels = c("Negative", "Positive"),
+                      breaks = c("Negative", "Positive"),
+                      values = c("darkcyan", "darkblue")) +
+  scale_linetype_manual(name = "Mean",
+                        values = c("Observed" = "solid", "Predicted" = "dashed"),  # Define line types for each level of Status
+                        labels = c("Observed" = "Empirical", "Predicted" = "Conditional (GLMM Prediction)")) +  # Set custom labels
+  #values = c("Control" = "darkslategrey", "MVA85A" = "firebrick")) +  # Adjust colors for clarity
+  theme_bw() + xlab("\n Time (Days After Birth)") + ylab(paste0("Mean ", varA[39], " \n")) + labs(title = "") + 
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
+
+AM_1.3 = glmmTMB(O39 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_1.3 = summary(AM_1.3)
 
 R1.3 = ranef(AM_1.3)
 qqnorm(R1.3$cond$ID$`(Intercept)`, main = "")
 qqline(R1.3$cond$ID$`(Intercept)`)
+
+plot(simulateResiduals(AM_1.3, n = 1000))
+
+# FA
+
+pred_v3frame = AM_1.3$frame
+
+pred_v3 = predict(AM_1.3, type = "cond")
+pred_v3dat = data.frame(ID = pred_v3frame$ID, Time = as.character(pred_v3frame$Time), 
+                        FA = as.character(pred_v3frame$FA),
+                        Sex = as.character(pred_v3frame$Gender), O = pred_v3frame$O39, P = pred_v3)
+
+
+mean_by_v3_pred = pred_v3dat %>% group_by(Time, FA) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v3_observed = pred_v3dat %>% group_by(Time, FA) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+mean_by_v3_predG = pred_v3dat %>% group_by(Time, Sex, FA) %>%
+  summarise(meanP = mean(P, na.rm = TRUE), seP = 0, .groups = 'drop')
+mean_by_v3_observedG = pred_v3dat %>% group_by(Time, Sex, FA) %>%
+  summarise(meanO = mean(O, na.rm = TRUE), seO = sd(O) / sqrt(n()), .groups = 'drop')
+
+
+meanvec = c(mean_by_v3_pred$meanP, mean_by_v3_observed$meanO)
+statusvec = c(rep("Predicted", 12), rep("Observed", 12))
+sevec = c(mean_by_v3_pred$seP, mean_by_v3_observed$seO)
+daysvec = c(mean_by_v3_pred$Time, mean_by_v3_observed$Time)
+varvec = c(mean_by_v3_pred$FA, mean_by_v3_observed$FA)
+
+v3df = data.frame(Status = statusvec, Time = daysvec, Mean = meanvec, SEL = meanvec - sevec, SEU = meanvec + sevec, Variable = varvec)
+v3df$Time = factor(v3df$Time, levels = c("56", "112", "365"))
+v3df =  v3df %>% filter(Variable %in% c("3", "2"))
+
+ggplot(v3df, aes(x = Time, y = Mean, color = factor(Variable), linetype = Status)) +
+  ylim(0, 100) +
+  geom_point(aes(x = Time, y = Mean, color = factor(Variable))) +
+  geom_line(aes(x = Time, y = Mean, color = factor(Variable), group = interaction(Variable, Status)), linewidth = 0.8) +
+  scale_colour_manual(name = "Feeding", labels = c("No Cotrimoxazole", "Cotrimoxazole"),
+                      breaks = c("3", "2"),
+                      values = c("chartreuse3", "darkgreen")) +
+  scale_linetype_manual(name = "Mean",
+                        values = c("Observed" = "solid", "Predicted" = "dashed"),  # Define line types for each level of Status
+                        labels = c("Observed" = "Empirical", "Predicted" = "Conditional (GLMM Prediction)")) +  # Set custom labels
+  #values = c("Control" = "darkslategrey", "MVA85A" = "firebrick")) +  # Adjust colors for clarity
+  theme_bw() + xlab("\n Time (Days After Birth)") + ylab(paste0("Mean ", varA[39], " \n")) + labs(title = "") + 
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
 
 # LQMM
 
@@ -324,5 +815,16 @@ qqline(R2.1$`(Intercept)`)
 AM_2.2 = lqmm(fixed = O39 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.2 = summary(AM_2.2)
 
+R2.2 = ranef(AM_2.2)
+qqnorm(R2.2$`(Intercept)`, main = "")
+qqline(R2.2$`(Intercept)`)
+
 AM_2.3 = lqmm(fixed = O39 ~ FA*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.3 = summary(AM_2.3)
+
+R2.3 = ranef(AM_2.3)
+qqnorm(R2.3$`(Intercept)`, main = "")
+qqline(R2.3$`(Intercept)`)
+
+```
+
