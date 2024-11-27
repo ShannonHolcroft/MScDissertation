@@ -114,12 +114,24 @@ qqline(Rs0.3)
 AM_1.1 = glmmTMB(O6 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
 AS_1.1 = summary(AM_1.1)
 
+R1.1 = ranef(AM_1.1)
+qqnorm(R1.1$cond$ID$`(Intercept)`, main = "")
+qqline(R1.1$cond$ID$`(Intercept)`)
 
 AM_1.2 = glmmTMB(O6 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
 AS_1.2 = summary(AM_1.2)
 
+R1.2 = ranef(AM_1.2)
+qqnorm(R1.2$cond$ID$`(Intercept)`, main = "")
+qqline(R1.2$cond$ID$`(Intercept)`)
+
 AM_1.3 = glmmTMB(O6 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
 AS_1.3 = summary(AM_1.3)
+
+R1.3 = ranef(AM_1.3)
+qqnorm(R1.3$cond$ID$`(Intercept)`, main = "")
+qqline(R1.3$cond$ID$`(Intercept)`)
+
 
 # LQMM
 
@@ -186,12 +198,26 @@ qqline(Rs0.3)
 AM_1.1 = glmmTMB(94 - O15 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_1.1 = summary(AM_1.1)
 
+R1.1 = ranef(AM_1.1)
+qqnorm(R1.1$cond$ID$`(Intercept)`, main = "")
+qqline(R1.1$cond$ID$`(Intercept)`)
+
 
 AM_1.2 = glmmTMB(94 - O15 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_1.2 = summary(AM_1.2)
 
+R1.2 = ranef(AM_1.2)
+qqnorm(R1.2$cond$ID$`(Intercept)`, main = "")
+qqline(R1.2$cond$ID$`(Intercept)`)
+
+
 AM_1.3 = glmmTMB(94 - O15 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_1.3 = summary(AM_1.3)
+
+R1.3 = ranef(AM_1.3)
+qqnorm(R1.3$cond$ID$`(Intercept)`, main = "")
+qqline(R1.3$cond$ID$`(Intercept)`)
+
 
 # LQMM
 
@@ -259,12 +285,24 @@ qqline(Rs0.3)
 AM_1.1 = glmmTMB(O39 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
 AS_1.1 = summary(AM_1.1)
 
+R1.1 = ranef(AM_1.1)
+qqnorm(R1.1$cond$ID$`(Intercept)`, main = "")
+qqline(R1.1$cond$ID$`(Intercept)`)
 
 AM_1.2 = glmmTMB(O39 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
 AS_1.2 = summary(AM_1.2)
 
+R1.2 = ranef(AM_1.2)
+qqnorm(R1.2$cond$ID$`(Intercept)`, main = "")
+qqline(R1.2$cond$ID$`(Intercept)`)
+
+
 AM_1.3 = glmmTMB(O39 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
 AS_1.3 = summary(AM_1.3)
+
+R1.3 = ranef(AM_1.3)
+qqnorm(R1.3$cond$ID$`(Intercept)`, main = "")
+qqline(R1.3$cond$ID$`(Intercept)`)
 
 # LQMM
 
