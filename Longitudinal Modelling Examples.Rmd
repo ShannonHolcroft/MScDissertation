@@ -82,6 +82,19 @@ labeller = function(variable,value){
 l = varA[6]
 k = 6
 
+# Histograms
+
+ggplot(groupA, aes(x = O6)) +
+  geom_histogram(binwidth = 0.1, fill = "darkgrey", color = "black") +
+  labs(x = paste0("\n ", varA[6]), y = "Frequency \n") +
+  theme_bw() +
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
+
 # Fit models
 
 # LMM
@@ -329,6 +342,29 @@ qqline(R2.3$`(Intercept)`)
 ```{r Outcome15, include=TRUE}
 l = varA[15]
 k = 15
+
+ggplot(groupA, aes(x = 94 - O15)) +
+  geom_histogram(binwidth = 5, fill = "darkgrey", color = "black") +
+  labs(x = paste0("\n 94 - ", varA[15]), y = "Frequency \n") +
+  theme_bw() +
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
+
+ggplot(groupA, aes(x = O15)) +
+  geom_histogram(binwidth = 5, fill = "darkgrey", color = "black") +
+  labs(x = paste0("\n", varA[15]), y = "Frequency \n") +
+  theme_bw() +
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
+
 
 # Fit models
 
@@ -585,6 +621,18 @@ qqline(R2.3$`(Intercept)`)
 ```{r Outcome39, include=TRUE}
 l = varA[39]
 k = 39
+
+ggplot(groupA, aes(x = O39)) +
+  geom_histogram(binwidth = 10, fill = "darkgrey", color = "black") +
+  labs(x = paste0("\n ", varA[39]), y = "Frequency \n") +
+  theme_bw() +
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"),
+        legend.text = element_text(size = 10, family = "Arial"),
+        legend.position = "bottom")
+
 
 # Fit models
 
