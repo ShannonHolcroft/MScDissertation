@@ -104,10 +104,10 @@ AM_2.1 = lqmm(fixed = O6 ~ Treatment*Time + Gender*Time, random = ~ 1, tau = 0.5
 AS_2.1 = summary(AM_2.1)
 
 
-AM_2.2 = glmmTMB(fixed = O6 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AM_2.2 = lqmm(fixed = O6 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.2 = summary(AM_2.2)
 
-AM_2.3 = glmmTMB(O6 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AM_2.3 = lqmm(O6 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
 AS_2.3 = summary(AM_2.3)
 
 ```
@@ -152,10 +152,10 @@ AM_2.1 = lqmm(fixed = 94 - O15 ~ Treatment*Time + Gender*Time, random = ~ 1, tau
 AS_2.1 = summary(AM_2.1)
 
 
-AM_2.2 = glmmTMB(fixed = 94 - O15 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AM_2.2 = lqmm(fixed = 94 - O15 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.2 = summary(AM_2.2)
 
-AM_2.3 = glmmTMB(fixed = 94 - O15 ~ FA*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AM_2.3 = lqmm(fixed = 94 - O15 ~ FA*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.3 = summary(AM_2.3)
 
 ```
@@ -200,8 +200,8 @@ AS_1.3 = summary(AM_1.3)
 AM_2.1 = lqmm(fixed = O39 ~ Treatment*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.1 = summary(AM_2.1)
 
-AM_2.2 = glmmTMB(fixed = O39 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AM_2.2 = lqmm(fixed = O39 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.2 = summary(AM_2.2)
 
-AM_2.3 = glmmTMB(fixed = O39 ~ FA*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
+AM_2.3 = lqmm(fixed = O39 ~ FA*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.3 = summary(AM_2.3)
