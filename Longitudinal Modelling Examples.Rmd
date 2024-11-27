@@ -76,15 +76,38 @@ k = 6
 AM_0.1 = glmmTMB(O6 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
 AS_0.1 = summary(AM_0.1)
 
+R0.1 = ranef(AM_0.1)
+qqnorm(R0.1$cond$ID$`(Intercept)`, main = "")
+qqline(R0.1$cond$ID$`(Intercept)`)
+
+Rs0.1 = residuals(AM_0.1, type = "response")
+qqnorm(Rs0.1, main = "")
+qqline(Rs0.1)
 
 AM_0.2 = glmmTMB(O6 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
 AS_0.2 = summary(AM_0.2)
+
+R0.2 = ranef(AM_0.2)
+qqnorm(R0.2$cond$ID$`(Intercept)`, main = "")
+qqline(R0.2$cond$ID$`(Intercept)`)
+
+Rs0.2 = residuals(AM_0.2, type = "response")
+qqnorm(Rs0.2, main = "")
+qqline(Rs0.2)
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
 
 AM_0.3 = glmmTMB(O6 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
 AS_0.3 = summary(AM_0.3)
+
+R0.3 = ranef(AM_0.3)
+qqnorm(R0.3$cond$ID$`(Intercept)`, main = "")
+qqline(R0.3$cond$ID$`(Intercept)`)
+
+Rs0.3 = residuals(AM_0.3, type = "response")
+qqnorm(Rs0.3, main = "")
+qqline(Rs0.3)
 
 # GLMM
 
@@ -107,7 +130,7 @@ AS_2.1 = summary(AM_2.1)
 AM_2.2 = lqmm(fixed = O6 ~ QFT*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.2 = summary(AM_2.2)
 
-AM_2.3 = lqmm(O6 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AM_2.3 = lqmm(fixed = O6 ~ FA*Time + Gender*Time, random = ~ 1, tau = 0.5, na.action = na.omit, group = ID, data = groupA, nK = 1, type = "normal")
 AS_2.3 = summary(AM_2.3)
 
 ```
@@ -124,15 +147,39 @@ k = 15
 AM_0.1 = glmmTMB(94 - O15 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
 AS_0.1 = summary(AM_0.1)
 
+R0.1 = ranef(AM_0.1)
+qqnorm(R0.1$cond$ID$`(Intercept)`, main = "")
+qqline(R0.1$cond$ID$`(Intercept)`)
+
+Rs0.1 = residuals(AM_0.1, type = "response")
+qqnorm(Rs0.1, main = "")
+qqline(Rs0.1)
+
 
 AM_0.2 = glmmTMB(94 - O15 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
 AS_0.2 = summary(AM_0.2)
+
+R0.2 = ranef(AM_0.2)
+qqnorm(R0.2$cond$ID$`(Intercept)`, main = "")
+qqline(R0.2$cond$ID$`(Intercept)`)
+
+Rs0.2 = residuals(AM_0.2, type = "response")
+qqnorm(Rs0.2, main = "")
+qqline(Rs0.2)
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
 
 AM_0.3 = glmmTMB(94 - O15 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
 AS_0.3 = summary(AM_0.3)
+
+R0.3 = ranef(AM_0.3)
+qqnorm(R0.3$cond$ID$`(Intercept)`, main = "")
+qqline(R0.3$cond$ID$`(Intercept)`)
+
+Rs0.3 = residuals(AM_0.3, type = "response")
+qqnorm(Rs0.3, main = "")
+qqline(Rs0.3)
 
 # GLMM
 
@@ -173,15 +220,39 @@ k = 39
 AM_0.1 = glmmTMB(O39 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
 AS_0.1 = summary(AM_0.1)
 
+R0.1 = ranef(AM_0.1)
+qqnorm(R0.1$cond$ID$`(Intercept)`, main = "")
+qqline(R0.1$cond$ID$`(Intercept)`)
+
+Rs0.1 = residuals(AM_0.1, type = "response")
+qqnorm(Rs0.1, main = "")
+qqline(Rs0.1)
+
 
 AM_0.2 = glmmTMB(O39 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
 AS_0.2 = summary(AM_0.2)
+
+R0.2 = ranef(AM_0.2)
+qqnorm(R0.2$cond$ID$`(Intercept)`, main = "")
+qqline(R0.2$cond$ID$`(Intercept)`)
+
+Rs0.2 = residuals(AM_0.2, type = "response")
+qqnorm(Rs0.2, main = "")
+qqline(Rs0.2)
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
 
 AM_0.3 = glmmTMB(O39 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
 AS_0.3 = summary(AM_0.3)
+
+R0.3 = ranef(AM_0.3)
+qqnorm(R0.3$cond$ID$`(Intercept)`, main = "")
+qqline(R0.3$cond$ID$`(Intercept)`)
+
+Rs0.3 = residuals(AM_0.3, type = "response")
+qqnorm(Rs0.3, main = "")
+qqline(Rs0.3)
 
 # GLMM
 
