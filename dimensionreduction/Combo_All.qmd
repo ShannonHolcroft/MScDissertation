@@ -6,6 +6,116 @@ format: revealjs
 
 ## Data Preparation
 
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+
+setwd("C:/Users/HLCSH/OneDrive/Documents/MSc 2023-2024/MSc Dissertation/MScDissertationCodeBase")
+
+# Load packages
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+library(reshape2)
+library(glmmTMB)
+library(MASS)
+library(DHARMa)
+options(scipen = 999)
+
+# Read in group data
+
+groupA = read_xlsx("data/groupAinfantsData_AD_23Feb2023.xlsx")
+varA = colnames(groupA[, 17:56])
+
+groupB = read_xlsx("data/groupBinfantsData_AD_23Feb2023.xlsx")
+varB = colnames(groupB[, 16:34])
+
+# Change variable names
+
+## Study design and covariates
+
+colnames(groupA)[1:4] = c("ID", "Group", "Time", "Treatment")
+groupA$Time = as.factor(groupA$Time)
+colnames(groupA)[10] = c("QFT")
+colnames(groupA)[12:13] = c("Feeding", "Antibiotic")
+
+colnames(groupB)[1:4] =  c("ID", "Group", "Time", "Treatment")
+groupB$Time = as.factor(groupB$Time)
+colnames(groupB)[10] = c("QFT")
+colnames(groupB)[12:13] = c("Feeding", "Antibiotic")
+
+# Create new dummy variables for feeding and antibiotic
+
+groupA$FA = ifelse(groupA$Feeding == "Breast Milk" & groupA$Antibiotic == "Yes", 3, ifelse(groupA$Feeding == "Breast Milk" & groupA$Antibiotic == "No", 2, ifelse(groupA$Feeding == "Formula" & groupA$Antibiotic == "No", 1, 0)))
+groupA$FA = factor(groupA$FA)
+
+groupB$FA = ifelse(groupB$Feeding == "Breast Milk" & groupB$Antibiotic == "Y", 3, ifelse(groupB$Feeding == "Breast Milk" & groupB$Antibiotic == "N", 2, ifelse(groupB$Feeding == "Formula" & groupB$Antibiotic == "N", 1, 0)))
+groupB$FA = factor(groupB$FA)
+
+## Create immune response data sets
+
+# Rename by number
+
+groupA = rename_with(.data = groupA, .fn = ~ paste0("O", 1:length(varA)), .cols = 17:56)
+groupB = rename_with(.data = groupB, .fn = ~ paste0("O", 1:length(varB)), .cols = 16:34)
+
+# Drop indeterminate QFT observations
+indet_idsA = groupA[which(groupA$QFT == "Indeterminate"), ]$ID
+indet_idsB = groupB[which(groupB$QFT == "Indeterminate"), ]$ID
+
+groupA = groupA[-which(groupA$ID %in% indet_idsA), ]
+groupB = groupB[-which(groupB$ID %in% indet_idsB), ]
+
+# Make time and variables of interest factors
+
+colnam = c("Treatment", "Time", "Gender", "QFT", "FA")
+groupA[colnam] = lapply(groupA[colnam], factor)
+groupB[colnam] = lapply(groupB[colnam], factor)
+
+# Set reference levels for Group A
+
+groupA$Time = factor(groupA$Time, levels = c("112", "56", "365"))
+
+# Divide Group B by time points and set reference levels
+
+groupB1 = groupB[, -c(16:18, 23:34)]
+groupB1 = groupB1[-which(groupB1$Time %in% c("63", "0", "56")), ]
+groupB1$Time = factor(groupB1$Time, levels = c("112", "365"))
+
+groupB2 = groupB[, -c(16:22)]
+groupB2 = groupB2[-which(groupB2$Time %in% c("112", "0", "365")), ]
+groupB2$Time = factor(groupB2$Time, levels = c("63", "56"))
+
+# Relevel for coefficient extraction
+
+groupAre1 = groupA
+groupAre1$FA = factor(groupAre1$FA, levels = c(3, 0, 1, 2))
+groupAre1[colnam] = lapply(groupAre1[colnam], factor)
+
+groupB1re1 = groupB1
+groupB1re1$FA = factor(groupB1re1$FA, levels = c(3, 0, 1, 2))
+groupB1re1[colnam] = lapply(groupB1re1[colnam], factor)
+
+groupB2re1 = groupB2
+groupB2re1$FA = factor(groupB2re1$FA, levels = c(3, 0, 1, 2))
+groupB2re1[colnam] = lapply(groupB2re1[colnam], factor)
+
+sort_row_values = function(data) {
+  
+  # Ensure data is a data frame
+  data = as.data.frame(data)
+  
+  # Swap values where LowerCI > UpperCI
+  swap_indices = which(data$LowerCI > data$UpperCI)
+  data[swap_indices, c("LowerCI", "UpperCI")] = data[swap_indices, c("UpperCI", "LowerCI")]
+  
+  return(data)
+}
+
+
+
+```
+
 Read in the data extracted from the fitted GLMMs for each group and variable of interest.
 
 ```{r, echo=FALSE}
@@ -15,6 +125,8 @@ library(reshape2)
 library(cluster)
 library(factoextra)
 library(ggdendro)
+library(glmmTMB)
+library(emmeans)
 
 # Read in combined data
 
@@ -562,12 +674,17 @@ AS_C2.2 = summary(AM_C2.2)
 
 n2 = length(mva_pca_set2)
 
+v2.1 = varA[4]
+v2.2 = varA[19]
+
 # Cluster 3 models
 
 AM_C3.1 = glmmTMB(O30 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_C3.1 = summary(AM_C3.1)
 
 n3 = length(mva_pca_set3)
+
+v3.1 = varA[30]
 
 # Cluster 4 models
 
@@ -579,6 +696,9 @@ AS_4.2 = summary(AM_C4.2)
 
 n4 = length(mva_pca_set4)
 
+v4.1 = varA[17]
+v4.2 = varA[21]
+
 # Cluster 5 models
 
 AM_5.1 = glmmTMB(O7 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
@@ -588,6 +708,9 @@ AM_C5.2 = glmmTMB(101 - O37 ~ Treatment*Time + Gender*Time + (1| ID), data = gro
 AS_C5.2 = summary(AM_C5.2)
 
 n5 = length(mva_pca_set5)
+
+v5.1 = varA[7]
+v5.2 = varA[37]
 
 # Cluster 6 models
 
@@ -602,10 +725,14 @@ AS_C6.3 = summary(AM_C6.3)
 
 n6 = length(mva_pca_set6)
 
+v6.1 = varA[3]
+v6.2 = varA[31]
+v6.3 = varA[36]
 
 ```
 
-Create a contrast matrix 
+Create a contrast matrix for the predetermined pairwise comparisons.
+
 ```{r}
 
 # Levels of the factors
@@ -644,6 +771,7 @@ contrast_list = list(
 contrast_list
 ```
 
+Estimate the contrasts and apply corrections for Cluster 1
 ```{r}
 
 emmC1.1 = emmeans(AM_C1.1, ~ Treatment * Time)
@@ -661,6 +789,33 @@ clusterC1res = clusterC1res %>% arrange(p.value)
 
 clusterC1res$BH = p.adjust(clusterC1res$p.value, method = "BH", n = length(clusterC1res$p.value))
 clusterC1res$BY = p.adjust(clusterC1res$p.value, method = "BY", n = length(clusterC1res$p.value))
+
+```
+
+Estimate and apply corrections for Cluster 2
+```{r}
+
+emmC1.1 = emmeans(AM_C1.1, ~ Treatment * Time)
+emmC1.2 = emmeans(AM_C1.2, ~ Treatment * Time)
+
+# Apply custom contrasts
+contrastsC1.1 = data.frame(contrast(emmC1.1, method = contrast_list, adjust = "none"))
+contrastsC1.2 = data.frame(contrast(emmC1.2, method = contrast_list, adjust = "none"))
+
+contrastsC1.1$Outcome = v1.1
+contrastsC1.2$Outcome = v1.2
+
+clusterC1res = rbind(contrastsC1.1, contrastsC1.2)
+clusterC1res = clusterC1res %>% arrange(p.value)
+
+clusterC1res$BH = p.adjust(clusterC1res$p.value, method = "BH", n = length(clusterC1res$p.value))
+clusterC1res$BY = p.adjust(clusterC1res$p.value, method = "BY", n = length(clusterC1res$p.value))
+
+clusterC1res$expestimate = exp(clusterC1res$estimate)
+
+clusterC1res %>% filter(BH < 0.06) %>% filter(Outcome == v1.1)
+
+clusterC1res %>% filter(BH < 0.06) %>% filter(Outcome == v1.2)
 
 ```
 
