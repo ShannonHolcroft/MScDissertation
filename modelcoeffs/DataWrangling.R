@@ -2,12 +2,11 @@
 library(dplyr)
 library(purrr)
 library(readxl)
+library(readr)
 
 # Specify the folder containing the CSV files
 
-folder_path = "C:/Users/HLCSH/OneDrive/Documents/MSc 2023-2024/SATVI_Trial/RawModelData"
-
-setwd("C:/Users/HLCSH/OneDrive/Documents/MSc 2023-2024/SATVI_Trial/ModelFits")
+folder_path = "C:/Users/HLCSH/OneDrive/Documents/MSc 2023-2024/MSc Dissertation/MScDissertationCodeBase/modelcoeffs"
 
 # Get a list of all CSV files in the folder
 
@@ -23,34 +22,14 @@ lapply(data_list, function(df) df[1, "Outcome"])
 
 # Separate out reflected immune outcomes
 
-setwd("C:/Users/HLCSH/OneDrive/Documents/MSc 2023-2024/SATVI_Trial")
-
-# Read in original data for reference
-
-groupA = read_xlsx("groupAinfantsData_AD_23Feb2023.xlsx")
-varA = colnames(groupA[, 17:56])
-
-groupB = read_xlsx("groupBinfantsData_AD_23Feb2023.xlsx")
-varB = colnames(groupB[, 16:34])
-
-# Read in model structure CSV files for reference
-
-groupAfit = read.csv("GroupAResults.csv")
-groupBfit = read.csv("GroupBResults.csv")
-
-# If reflected in analysis, make coefficients negative
-
-reflected_list = groupAfit %>% filter(Transform == "Left skew corrected")
-reflected_list = varA[reflected_list$Outcome]
-
 # Define the column name to search within
-column_name = "Outcome"
+column_name = "Reflected"
 
-data_listR = Filter(function(df) df[1, column_name] %in% reflected_list, data_list)
-lapply(data_listR, function(df) df[1, column_name])
+data_listR = Filter(function(df) df[1, column_name] == "TRUE", data_list)
+lapply(data_listR, function(df) df[1, "Outcome"])
 
 data_listNotR = data_list[-which(data_list %in% data_listR)]
-lapply(data_listNotR, function(df) df[1, column_name])
+lapply(data_listNotR, function(df) df[1, "Outcome"])
 
 # Add new columns - estimate/se, exponentiated coefficient, bounds
 
@@ -152,7 +131,6 @@ filenames = lapply(seq_along(data_listR), function(i) {
 filenames = lapply(filenames, function(f) paste0(f, ".csv"))
 filenames = unlist(filenames)
 filenames = gsub("/", "", filenames)
-
 
 
 write_excel_csv(data_listR[[1]], file = filenames[1])
