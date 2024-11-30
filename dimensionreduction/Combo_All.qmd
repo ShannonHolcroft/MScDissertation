@@ -43,18 +43,18 @@ allB = unique(datB$Outcome)
 
 # Separate by variables of interest
 
-dat1A = datA %>% filter(Group == "MVA85A") %>% filter(Coefficient %in% c("TreatmentMVA85A", "TreatmentMVA85A:Day56", "TreatmentMVA85A:Day365"))
-dat1B = datB %>% filter(Group == "MVA85A") %>% filter(Coefficient %in% c("TreatmentMVA85A", "TreatmentMVA85A:Day56", "TreatmentMVA85A:Day365"))
+dat1A = datA %>% filter(Group == "MVA85A") %>% filter(Coefficient %in% c("TreatmentMVA85A", "TreatmentMVA85A:Time56", "TreatmentMVA85A:Time365"))
+dat1B = datB %>% filter(Group == "MVA85A") %>% filter(Coefficient %in% c("TreatmentMVA85A", "TreatmentMVA85A:Time56", "TreatmentMVA85A:Time365"))
 
-dat2A = datA %>% filter(Group == "QFT") %>% filter(Coefficient %in% c("QFTPositive", "QFTPositive:Day56", "QFTPositive:Day365"))
-dat2B = datB %>% filter(Group == "QFT") %>% filter(Coefficient %in% c("QFTPositive", "QFTPositive:Day56", "QFTPositive:Day365"))
+dat2A = datA %>% filter(Group == "QFT") %>% filter(Coefficient %in% c("QFTPositive", "QFTPositive:Time56", "QFTPositive:Time365"))
+dat2B = datB %>% filter(Group == "QFT") %>% filter(Coefficient %in% c("QFTPositive", "QFTPositive:Time56", "QFTPositive:Time365"))
 
 dat3A = datA %>% filter(Group %in% c("FA - FA", "FA - BA"))
 
 # Retain specific comparisons of interest: FA0 in FA-BA, FA1 in FA-FA, FA2 in FA-FA, FA3 in FA-BA
 
-dat3.1.1A = dat3A %>% filter(Group == "FA - FA") %>% filter(Coefficient %in% c("FA1", "FA3", "FA1:Day56", "FA1:Day365", "FA3:Day56", "FA3:Day365", "FA1:Day63", "FA3:Day63"))
-dat3.1.2A = dat3A %>% filter(Group == "FA - BA") %>% filter(Coefficient %in% c("FA0", "FA2", "FA0:Day56", "FA2:Day56", "FA2:Day365",  "FA0:Day365", "FA0:Day63","FA2:Day63"))
+dat3.1.1A = dat3A %>% filter(Group == "FA - FA") %>% filter(Coefficient %in% c("FA1", "FA3", "FA1:Time56", "FA1:Time365", "FA3:Time56", "FA3:Time365", "FA1:Time63", "FA3:Time63"))
+dat3.1.2A = dat3A %>% filter(Group == "FA - BA") %>% filter(Coefficient %in% c("FA0", "FA2", "FA0:Time56", "FA2:Time56", "FA2:Time365",  "FA0:Time365", "FA0:Time63","FA2:Time63"))
       
 dat3A = rbind(dat3.1.1A, dat3.1.2A)
 
@@ -62,13 +62,13 @@ dat3B = datB %>% filter(Group %in% c("FA - FA", "FA - BA"))
 
 # Retain specific comparisons of interest: FA0 in FA-BA, FA1 in FA-FA, FA2 in FA-FA, FA3 in FA-BA
 
-dat3.1.1B = dat3B %>% filter(Group == "FA - FA") %>% filter(Coefficient %in% c("FA1", "FA3", "FA1:Day56", "FA1:Day365", "FA3:Day56", "FA3:Day365", "FA1:Day63", "FA3:Day63"))
-dat3.1.2B = dat3B %>% filter(Group == "FA - BA") %>% filter(Coefficient %in% c("FA0", "FA2", "FA0:Day56", "FA2:Day56", "FA2:Day365",  "FA0:Day365", "FA0:Day63","FA2:Day63"))
+dat3.1.1B = dat3B %>% filter(Group == "FA - FA") %>% filter(Coefficient %in% c("FA1", "FA3", "FA1:Time56", "FA1:Time365", "FA3:Time56", "FA3:Time365", "FA1:Time63", "FA3:Time63"))
+dat3.1.2B = dat3B %>% filter(Group == "FA - BA") %>% filter(Coefficient %in% c("FA0", "FA2", "FA0:Time56", "FA2:Time56", "FA2:Time365",  "FA0:Time365", "FA0:Time63","FA2:Time63"))
       
 dat3B = rbind(dat3.1.1B, dat3.1.2B)
 
-dat4A = datA %>% filter(Coefficient %in% c("GenderM", "Day56:GenderM", "Day365:GenderM"))
-dat4B = datB %>% filter(Coefficient %in% c("GenderM", "Day56:GenderM", "Day365:GenderM"))
+dat4A = datA %>% filter(Coefficient %in% c("GenderM", "Time56:GenderM", "Time365:GenderM"))
+dat4B = datB %>% filter(Coefficient %in% c("GenderM", "Time56:GenderM", "Time365:GenderM"))
 
 # Create a clustering colour palette
 
@@ -217,7 +217,7 @@ theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
 
 ```
 
-PC1 primarily describes the interaction between MVA85A priming and Day 56. This cluster likely contains immune outcomes showing group differences before BCG.
+PC1 primarily describes the interaction between MVA85A priming and Time 56. This cluster likely contains immune outcomes showing group differences before BCG.
 
 ```{r}
 fviz_contrib(pca1.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
@@ -282,7 +282,7 @@ theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
 ```
 
 
-PC1 primarily describes the interaction between MVA85A priming and Day 56, but there is a smaller contribution by MVA85A priming 8 weeks after BCG than in Cluster 1.
+PC1 primarily describes the interaction between MVA85A priming and Time 56, but there is a smaller contribution by MVA85A priming 8 weeks after BCG than in Cluster 1.
 
 ```{r}
 fviz_contrib(pca1.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
