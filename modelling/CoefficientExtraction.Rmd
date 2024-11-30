@@ -651,7 +651,7 @@ write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 #resA[k, ]
 ```
 
-**%CD8+ totIFNg+:** Doesn't run on profile.
+**%CD8+ any:**
 
 ```{r Outcome8, include=TRUE}
 l = varA[8]
@@ -745,7 +745,7 @@ write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 #resA[k, ]
 ```
 
-**%CD8+ totIL2+:** 
+**%CD8+ totIFng+:** 
 
 ```{r Outcome9, include=TRUE}
 l = varA[9]
