@@ -701,8 +701,8 @@ v4.2 = varA[21]
 
 # Cluster 5 models
 
-AM_5.1 = glmmTMB(O7 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
-AS_5.1 = summary(AM_5.1)
+AM_C5.1 = glmmTMB(O7 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_C5.1 = summary(AM_5.1)
 
 AM_C5.2 = glmmTMB(101 - O37 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_C5.2 = summary(AM_C5.2)
@@ -793,7 +793,8 @@ clusterC1res %>% filter(BH < 0.06) %>% filter(Outcome == v1.2)
 
 ```
 
-Estimate and apply corrections for Cluster 2
+Estimate and apply corrections for Cluster 2. There are only signicant differences over time in both groups.
+
 ```{r}
 
 emmC2.1 = emmeans(AM_C2.1, ~ Treatment * Time)
@@ -820,7 +821,7 @@ clusterC2res %>% filter(BH < 0.06) %>% filter(Outcome == v2.2)
 
 ```
 
-Estimate and apply corrections for Cluster 3
+Estimate and apply corrections for Cluster 3. There are only significant differences over time.
 
 ```{r}
 
@@ -842,10 +843,124 @@ clusterC3res$expestimate = exp(clusterC3res$estimate)
 
 clusterC3res %>% filter(BH < 0.06) %>% filter(Outcome == v3.1)
 
-contrast(emmC3.1, method = "pairwise", adjust = "none")
 ```
 
+Estimate and apply corrections for Cluster 4. There are only signicant differences over time in both groups.
 
+```{r}
+
+emmC4.1 = emmeans(AM_C4.1, ~ Treatment * Time)
+emmC4.2 = emmeans(AM_C4.2, ~ Treatment * Time)
+
+# Apply custom contrasts
+contrastsC4.1 = data.frame(contrast(emmC4.1, method = contrast_list, adjust = "none"))
+contrastsC4.2 = data.frame(contrast(emmC4.2, method = contrast_list, adjust = "none"))
+
+contrastsC4.1$Outcome = v4.1
+contrastsC4.2$Outcome = v4.2
+
+clusterC4res = rbind(contrastsC4.1, contrastsC4.2)
+clusterC4res = clusterC4res %>% arrange(p.value)
+
+clusterC4res$BH = p.adjust(clusterC4res$p.value, method = "BH", n = length(clusterC4res$p.value))
+clusterC4res$BY = p.adjust(clusterC4res$p.value, method = "BY", n = length(clusterC4res$p.value))
+
+clusterC4res$expestimate = exp(clusterC4res$estimate)
+
+clusterC4res %>% filter(BH < 0.06) %>% filter(Outcome == v4.1)
+
+clusterC4res %>% filter(BH < 0.06) %>% filter(Outcome == v4.2)
+
+```
+
+Estimate and apply corrections for Cluster 4. There are only signicant differences over time in both groups.
+
+```{r}
+
+emmC4.1 = emmeans(AM_C4.1, ~ Treatment * Time)
+emmC4.2 = emmeans(AM_C4.2, ~ Treatment * Time)
+
+# Apply custom contrasts
+contrastsC4.1 = data.frame(contrast(emmC4.1, method = contrast_list, adjust = "none"))
+contrastsC4.2 = data.frame(contrast(emmC4.2, method = contrast_list, adjust = "none"))
+
+contrastsC4.1$Outcome = v4.1
+contrastsC4.2$Outcome = v4.2
+
+clusterC4res = rbind(contrastsC4.1, contrastsC4.2)
+clusterC4res = clusterC4res %>% arrange(p.value)
+
+clusterC4res$BH = p.adjust(clusterC4res$p.value, method = "BH", n = length(clusterC4res$p.value))
+clusterC4res$BY = p.adjust(clusterC4res$p.value, method = "BY", n = length(clusterC4res$p.value))
+
+clusterC4res$expestimate = exp(clusterC4res$estimate)
+
+clusterC4res %>% filter(BH < 0.06) %>% filter(Outcome == v4.1)
+
+clusterC4res %>% filter(BH < 0.06) %>% filter(Outcome == v4.2)
+
+```
+
+Estimate and apply corrections for Cluster 5. We do find some group differences.
+
+```{r}
+
+emmC5.1 = emmeans(AM_C5.1, ~ Treatment * Time)
+emmC5.2 = emmeans(AM_C5.2, ~ Treatment * Time)
+
+# Apply custom contrasts
+contrastsC5.1 = data.frame(contrast(emmC5.1, method = contrast_list, adjust = "none"))
+contrastsC5.2 = data.frame(contrast(emmC5.2, method = contrast_list, adjust = "none"))
+
+contrastsC5.1$Outcome = v5.1
+contrastsC5.2$Outcome = v5.2
+
+clusterC5res = rbind(contrastsC5.1, contrastsC5.2)
+clusterC5res = clusterC5res %>% arrange(p.value)
+
+clusterC5res$BH = p.adjust(clusterC5res$p.value, method = "BH", n = length(clusterC5res$p.value))
+clusterC5res$BY = p.adjust(clusterC5res$p.value, method = "BY", n = length(clusterC5res$p.value))
+
+clusterC5res$expestimate = exp(clusterC5res$estimate)
+
+clusterC5res %>% filter(BH < 0.06) %>% filter(Outcome == v5.1)
+
+clusterC5res %>% filter(BH < 0.06) %>% filter(Outcome == v5.2)
+
+```
+
+Estimate and apply corrections for Cluster 6. We only find differences over time.
+
+```{r}
+
+emmC6.1 = emmeans(AM_C6.1, ~ Treatment * Time)
+emmC6.2 = emmeans(AM_C6.2, ~ Treatment * Time)
+emmC6.3 = emmeans(AM_C6.3, ~ Treatment * Time)
+
+# Apply custom contrasts
+contrastsC6.1 = data.frame(contrast(emmC6.1, method = contrast_list, adjust = "none"))
+contrastsC6.2 = data.frame(contrast(emmC6.2, method = contrast_list, adjust = "none"))
+contrastsC6.3 = data.frame(contrast(emmC6.3, method = contrast_list, adjust = "none"))
+
+contrastsC6.1$Outcome = v6.1
+contrastsC6.2$Outcome = v6.2
+contrastsC6.3$Outcome = v6.3
+
+clusterC6res = rbind(contrastsC6.1, contrastsC6.2, contrastsC6.3)
+clusterC6res = clusterC6res %>% arrange(p.value)
+
+clusterC6res$BH = p.adjust(clusterC6res$p.value, method = "BH", n = length(clusterC6res$p.value))
+clusterC6res$BY = p.adjust(clusterC6res$p.value, method = "BY", n = length(clusterC6res$p.value))
+
+clusterC6res$expestimate = exp(clusterC6res$estimate)
+
+clusterC6res %>% filter(BH < 0.06) %>% filter(Outcome == v6.1)
+
+clusterC6res %>% filter(BH < 0.06) %>% filter(Outcome == v6.2)
+
+clusterC6res %>% filter(BH < 0.06) %>% filter(Outcome == v6.3)
+
+```
 
 ```{r}
 
