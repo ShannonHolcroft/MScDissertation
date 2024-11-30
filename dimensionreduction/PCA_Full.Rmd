@@ -1,0 +1,585 @@
+---
+title: "Outcome Selection (Full): Group A and B"
+author: "Shannon Holcroft"
+format: html
+---
+
+Both time and the variables of interest are reference coded. The time effect describes the average change over time for the reference group (or if two patients were compared, holding the variable of interest constant). The variable of interest effect is then expressed as deviations from the trajectory of the reference group. 
+
+Combining the time and time-variable interactions tells you how the levels of the variable of interest differ at different time points. We're expressing temporal trajectories relative to 8 weeks after BCG and relative to the reference level. This does confound the variation from the time- and variable factors.
+
+Looking only at the time-variable interactions is likely to be more informative, because time-variable gives you the level differences in within-level changes (i.e. the level effect) from baseline to each time point, expressing these differences as deviations from the general time effect.
+
+```{r}
+library(tidyverse)
+library(reshape2)
+library(factoextra)
+library(ggpubr)
+library(cluster)
+library(ggdendro)
+
+```
+
+## Data Preparation
+
+Read in the data extracted from the fitted GLMMs for each group and variable of interest.
+
+```{r, echo=FALSE}
+
+# Read in combined data
+
+alldat = read.csv("combined_data.csv")[-1]
+
+unique(alldat$Coefficient)
+
+# Drop very infrequently observed immune outcomes, antibody titres and assays
+
+droplist = c("%CD8+ totIL17+", "%CD8+ totIL2+", "%CD8+ totIL22+", "Baby Anti-BCG IgA (AUC)", "Baby Anti-BCG IgM (AUC)", "Baby Anti-BCG IgG (AUC)", "Elispot (BCG)")
+
+alldat = alldat[-which(alldat$Outcome %in% droplist), ]
+
+# Change names for display for certain immune outcomes
+
+namelist = c("bulk CD8+/% R7-RA-", "bulk CD8+/% R7-RA+", "bulk CD8+/% R7+RA-", "bulk CD8+/% R7+RA+", "CD8+ ANYcytok+")
+namechange = c("Bulk CD8+/% R7-RA-", "Bulk CD8+/% R7-RA+", "Bulk CD8+/% R7+RA-", "Bulk CD8+/% R7+RA+", "%CD8+ ANYcytok+")
+
+alldat = alldat %>% mutate(Outcome = if_else(Outcome %in% namelist, recode(Outcome, !!!setNames(namechange, namelist)), Outcome))
+
+# Separate into Group A and Group B
+
+datA = alldat %>% filter(Arm == "A")
+allA = unique(datA$Outcome)
+
+datB = alldat %>% filter(Arm == "B")
+allB = unique(datB$Outcome)
+
+# Separate by variables of interest
+
+dat1A = datA %>% filter(Group == "MVA85A") %>% filter(Coefficient %in% c("Day56", "Day365", "TreatmentMVA85A", "TreatmentMVA85A:Day56", "TreatmentMVA85A:Day365"))
+dat1B = datB %>% filter(Group == "MVA85A") %>% filter(Coefficient %in% c("Day56", "Day365","TreatmentMVA85A", "TreatmentMVA85A:Day56", "TreatmentMVA85A:Day365"))
+
+dat2A = datA %>% filter(Group == "QFT") %>% filter(Coefficient %in% c("Day56", "Day365","QFTPositive", "QFTPositive:Day56", "QFTPositive:Day365"))
+dat2B = datB %>% filter(Group == "QFT") %>% filter(Coefficient %in% c("Day56", "Day365","QFTPositive", "QFTPositive:Day56", "QFTPositive:Day365"))
+
+dat3A = datA %>% filter(Group %in% c("FA - FA", "FA - BA"))
+
+# Retain specific comparisons of interest: FA0 in FA-BA, FA1 in FA-FA, FA2 in FA-FA, FA3 in FA-BA
+
+dat3.1.1A = dat3A %>% filter(Group == "FA - FA") %>% filter(Coefficient %in% c("Day56", "Day365", "Day63", "FA1", "FA3", "FA1:Day56", "FA1:Day365", "FA3:Day56", "FA3:Day365", "FA1:Day63", "FA3:Day63"))
+dat3.1.2A = dat3A %>% filter(Group == "FA - BA") %>% filter(Coefficient %in% c("Day56", "Day365", "Day63","FA0", "FA2", "FA0:Day56", "FA2:Day56", "FA2:Day365",  "FA0:Day365", "FA0:Day63","FA2:Day63"))
+      
+dat3A = rbind(dat3.1.1A, dat3.1.2A)
+
+dat3B = datB %>% filter(Group %in% c("FA - FA", "FA - BA"))
+
+# Retain specific comparisons of interest: FA0 in FA-BA, FA1 in FA-FA, FA2 in FA-FA, FA3 in FA-BA
+
+dat3.1.1B = dat3B %>% filter(Group == "FA - FA") %>% filter(Coefficient %in% c("Day56", "Day365", "Day63","FA1", "FA3", "FA1:Day56", "FA1:Day365", "FA3:Day56", "FA3:Day365", "FA1:Day63", "FA3:Day63"))
+dat3.1.2B = dat3B %>% filter(Group == "FA - BA") %>% filter(Coefficient %in% c("Day56", "Day365", "Day63","FA0", "FA2", "FA0:Day56", "FA2:Day56", "FA2:Day365",  "FA0:Day365", "FA0:Day63","FA2:Day63"))
+      
+dat3B = rbind(dat3.1.1B, dat3.1.2B)
+
+dat4A = datA %>% filter(Coefficient %in% c("GenderM", "Day56:GenderM", "Day365:GenderM", "Day56", "Day365", "Day63"))
+dat4B = datB %>% filter(Coefficient %in% c("GenderM", "Day56:GenderM", "Day365:GenderM", "Day56", "Day365", "Day63"))
+
+```
+
+Create data frames for PCA
+
+```{r}
+# Create long format data frames for groups A and B
+
+tmelt_1A = melt(dat1A) %>% filter(variable == "EstOverSE")
+tmelt_2A = melt(dat2A) %>% filter(variable == "EstOverSE")
+tmelt_3A = melt(dat3A) %>% filter(variable == "EstOverSE")
+tmelt_4A = melt(dat4A) %>% filter(variable == "EstOverSE")
+
+tmelt_1B = melt(dat1B) %>% filter(variable == "EstOverSE")
+tmelt_2B = melt(dat2B) %>% filter(variable == "EstOverSE")
+tmelt_3B = melt(dat3B) %>% filter(variable == "EstOverSE")
+tmelt_4B = melt(dat4B) %>% filter(variable == "EstOverSE")
+
+```
+
+## Make some heat maps to visualize what we're putting into the PCA
+
+The time effects far outweigh the other effects. Scaling is going to be very important.
+
+```{r}
+
+ggplot(tmelt_1A, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
+  geom_tile(color = "black") +
+  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  scale_fill_gradient2(low = "#075AFF",
+                       mid = "white",
+                       high = "#FF0000") + coord_fixed()
+
+ggplot(tmelt_2A, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
+  geom_tile(color = "black") +
+  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  scale_fill_gradient2(low = "#075AFF",
+                       mid = "white",
+                       high = "#FF0000") + coord_fixed()
+
+ggplot(tmelt_3A, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
+  geom_tile(color = "black") +
+  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  scale_fill_gradient2(low = "#075AFF",
+                       mid = "white",
+                       high = "#FF0000") + coord_fixed()
+
+ggplot(tmelt_4A, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
+  geom_tile(color = "black") +
+  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  scale_fill_gradient2(low = "#075AFF",
+                       mid = "white",
+                       high = "#FF0000") + coord_fixed()
+
+ggplot(tmelt_1B, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
+  geom_tile(color = "black") +
+  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  scale_fill_gradient2(low = "#075AFF",
+                       mid = "white",
+                       high = "#FF0000") + coord_fixed()
+
+ggplot(tmelt_2B, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
+  geom_tile(color = "black") +
+  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  scale_fill_gradient2(low = "#075AFF",
+                       mid = "white",
+                       high = "#FF0000") + coord_fixed()
+
+ggplot(tmelt_3B, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
+  geom_tile(color = "black") +
+  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  scale_fill_gradient2(low = "#075AFF",
+                       mid = "white",
+                       high = "#FF0000") + coord_fixed()
+
+ggplot(tmelt_4B, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
+  geom_tile(color = "black") +
+  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
+  scale_fill_gradient2(low = "#075AFF",
+                       mid = "white",
+                       high = "#FF0000") + coord_fixed()
+```
+
+## Principal Component Analysis
+
+## MVA85A
+
+Apply PCA to standardised regression coefficients for MVA85A and interactions between MVA85A and time points. In Group A, the first two PCs explains ~84% of the variance in the standardised regression coefficients. Interpreting this PC is sufficient.
+
+```{r}
+
+pca1.2A = tmelt_1A[, c("Outcome", "Coefficient", "value")]
+
+# Restructure the data frame
+
+pca1.2A = pca1.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca1.2A_wide = pca1.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca1.2A_mat = as.matrix(pca1.2A_wide[, 2:4], nrow = nrow(pca1.2A_wide), ncol = 3)
+rownames(pca1.2A_mat) = pca1.2A_wide$Outcome
+str(pca1.2A_mat)
+
+pca1.2Ares = princomp(pca1.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca1.2Ares) # Component 1 should suffice
+
+fviz_eig(pca1.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+
+```
+
+PC1 primarily describes Day 56 with Day 112 as the reference point and MVA85A priming at Day 112. PC2 primary describes Day 365.  
+
+```{r}
+fviz_contrib(pca1.2Ares, axes = 1, choice = "var")
+fviz_contrib(pca1.2Ares, axes = 2, choice = "var")
+```
+
+11 immune outcomes score more highly than the uniform expectation on PC1. 
+```{r}
+fviz_contrib(pca1.2Ares, axes = 1, choice = "ind") + ylim(0, 30) + theme_minimal() + theme(axis.text.x = element_text(angle = 90), axis.title.x = element_blank(), title = element_blank())
+
+fviz_contrib(pca1.2Ares, axes = 2, choice = "ind") + ylim(0, 30) + theme_minimal() + theme(axis.text.x = element_text(angle = 90), axis.title.x = element_blank(), title = element_blank())
+
+```
+
+The names of these 11 immune outcomes are printed below. Looking only at time-variable, there were 9 immune outcomes.
+```{r}
+contrib1.2A.1 = fviz_contrib(pca1.2Ares, axes = 1, choice = "ind")
+contrib1.2A.2 = fviz_contrib(pca1.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib1.2A.1$data[which(contrib1.2A.1$data$contrib >= 3), ]
+pc2dat = contrib1.2A.2$data[which(contrib1.2A.2$data$contrib >= 3), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+mva_pca_set = pcnames1
+
+```
+
+## QFT
+
+Apply PCA to standardised regression coefficients for QFT+ and interactions between QFT+ and time points. In Group A, two PCs explain ~82% of the variance in the standardised regression coefficients.
+
+```{r}
+
+pca2.2A = tmelt_2A[, c("Outcome", "Coefficient", "value")]
+
+# Restructure the data frame
+
+pca2.2A = pca2.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca2.2A_wide = pca2.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca2.2A_mat = as.matrix(pca2.2A_wide[, 2:4], nrow = nrow(pca2.2A_wide), ncol = 3)
+rownames(pca2.2A_mat) = pca2.2A_wide$Outcome
+str(pca2.2A_mat)
+
+pca2.2Ares = princomp(pca2.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca2.2Ares) # Component 1 should suffice
+
+fviz_eig(pca2.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+```
+
+PC1 primarily describes Day 56. PC2 primarily describes Day 365. QFT 8 weeks after BCG contributes - but barely.
+
+```{r}
+
+fviz_contrib(pca2.2Ares, axes = 1, choice = "var")
+fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+
+```
+
+```{r}
+par(mfrow = c(1, 2))
+fviz_contrib(pca2.2Ares, axes = 1, choice = "ind")
+fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+```
+
+There are 18 unique immune outcomes contributing to the PCs. Most of them are also in MVA85A subset.
+```{r}
+contrib2.2A.1 = fviz_contrib(pca2.2Ares, axes = 1, choice = "ind")
+contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib2.2A.1$data[which(contrib2.2A.1$data$contrib >= 3.5), ]
+pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 3.5), ]
+
+pcnames2 = as.character(unique(c(pc1dat$name, pc2dat$name)))
+#pcnames2 = as.character(unique(c(pc1dat$name)))
+
+qft_pca_set = pcnames2
+
+pcnames2[pcnames2 %in% pcnames1] # 3 in QFT not also identified for MVA85A
+pcnames1 %in% pcnames2 # Many identified for MVA85A but not QFT
+
+```
+
+## Hierarchical clustering
+
+# Get distance matrices
+```{r}
+
+dist1.2A = get_dist(pca1.2A_mat, "pearson")
+```
+
+
+# Run agglomerative hierarchical cluster with complete linkage
+
+```{r}
+dendro_data_k <- function(hc, k) {
+  
+  hcdata    <-  ggdendro::dendro_data(hc, type = "rectangle")
+  seg       <-  hcdata$segments
+  labclust  <-  cutree(hc, k)[hc$order]
+  segclust  <-  rep(0L, nrow(seg))
+  heights   <-  sort(hc$height, decreasing = TRUE)
+  height    <-  mean(c(heights[k], heights[k - 1L]), na.rm = TRUE)
+  
+  for (i in 1:k) {
+    xi      <-  hcdata$labels$x[labclust == i]
+    idx1    <-  seg$x    >= min(xi) & seg$x    <= max(xi)
+    idx2    <-  seg$xend >= min(xi) & seg$xend <= max(xi)
+    idx3    <-  seg$yend < height
+    idx     <-  idx1 & idx2 & idx3
+    segclust[idx] <- i
+  }
+  
+  idx                    <-  which(segclust == 0L)
+  segclust[idx]          <-  segclust[idx + 1L]
+  hcdata$segments$clust  <-  segclust
+  hcdata$segments$line   <-  as.integer(segclust < 1L)
+  hcdata$labels$clust    <-  labclust
+  
+  hcdata
+}
+
+
+
+set_labels_params <- function(nbLabels,
+                              direction = c("tb", "bt", "lr", "rl"),
+                              fan       = FALSE) {
+  if (fan) {
+    angle       <-  360 / nbLabels * 1:nbLabels + 90
+    idx         <-  angle >= 90 & angle <= 270
+    angle[idx]  <-  angle[idx] + 180
+    hjust       <-  rep(0, nbLabels)
+    hjust[idx]  <-  1
+  } else {
+    angle       <-  rep(0, nbLabels)
+    hjust       <-  0
+    if (direction %in% c("tb", "bt")) { angle <- angle + 45 }
+    if (direction %in% c("tb", "rl")) { hjust <- 1 }
+  }
+  list(angle = angle, hjust = hjust, vjust = 0.5)
+}
+
+plot_ggdendro <- function(hcdata,
+                          direction   = c("lr", "rl", "tb", "bt"),
+                          fan         = FALSE,
+                          scale.color = NULL,
+                          branch.size = 1,
+                          label.size  = 3,
+                          nudge.label = 0.01,
+                          expand.y    = 0.1) {
+  
+  direction <- match.arg(direction) # if fan = FALSE
+  ybreaks   <- pretty(segment(hcdata)$y, n = 5)
+  ymax      <- max(segment(hcdata)$y)
+  
+  ## branches
+  p <- ggplot() +
+    geom_segment(data         =  segment(hcdata),
+                 aes(x        =  x,
+                     y        =  y,
+                     xend     =  xend,
+                     yend     =  yend,
+                     linetype =  factor(line),
+                     colour   =  factor(clust)),
+                 lineend      =  "round",
+                 show.legend  =  FALSE,
+                 size         =  branch.size)
+  
+  ## orientation
+  if (fan) {
+    p <- p +
+      coord_polar(direction = -1) +
+      scale_x_continuous(breaks = NULL,
+                         limits = c(0, nrow(label(hcdata)))) +
+      scale_y_reverse(breaks = ybreaks)
+  } else {
+    p <- p + scale_x_continuous(breaks = NULL)
+    if (direction %in% c("rl", "lr")) {
+      p <- p + coord_flip()
+    }
+    if (direction %in% c("bt", "lr")) {
+      p <- p + scale_y_reverse(breaks = ybreaks)
+    } else {
+      p <- p + scale_y_continuous(breaks = ybreaks)
+      nudge.label <- -(nudge.label)
+    }
+  }
+  
+  # labels
+  labelParams <- set_labels_params(nrow(hcdata$labels), direction, fan)
+  hcdata$labels$angle <- labelParams$angle
+  
+  p <- p +
+    geom_text(data        =  label(hcdata),
+              aes(x       =  x,
+                  y       =  y,
+                  label   =  label,
+                  colour  =  factor(clust),
+                  angle   =  angle),
+              vjust       =  labelParams$vjust,
+              hjust       =  labelParams$hjust,
+              nudge_y     =  ymax * nudge.label,
+              size        =  label.size,
+              show.legend =  FALSE)
+  
+  # colors and limits
+  if (!is.null(scale.color)) {
+    p <- p + scale_color_manual(values = scale.color)
+  }
+  
+  ylim <- -round(ymax * expand.y, 1)
+  p    <- p + expand_limits(y = ylim)
+  
+  p
+}
+
+```
+
+
+```{r}
+
+res1.2.hclust = as.hclust(agnes(dist1.2A, diss = TRUE, method = "average"))
+```
+
+There are effectively 7 groups. Find a representative.
+```{r}
+
+hcdata1.2 = dendro_data_k(res1.2.hclust, 7)
+
+p <- plot_ggdendro(hcdata1.2,
+                   direction   = "rl",
+                   expand.y    = 0.2) 
+p + ylab("Link Height") + theme(axis.title.y = element_blank())
+
+#ggdendrogram(res1.2.hclust, rotate = TRUE, theme_dendro = FALSE) + ylab("Link Height") + theme(axis.title.y = element_blank())
+
+```
+
+
+```{r}
+
+clusters1.2A = cutree(res1.2.hclust, k=7)
+
+# Group 1
+
+names1 = names(clusters1.2A[clusters1.2A == 1])
+
+dist1.2Amat1 = as.matrix(dist1.2A)
+dist1.2Amat1 = dist1.2Amat1[which(rownames(dist1.2Amat1) %in% names1), ]
+
+euclid1.2Amat1 = as.matrix(dist(dist1.2Amat1))
+euclid1.2Adf1 = data.frame(euclid1.2Amat1)
+
+euclid1.2Adf1$SS = apply(euclid1.2Adf1, 1, function(x) sum(x^2))
+
+euclid1.2Adf1[which.min(euclid1.2Adf1$SS), ]
+
+
+```
+
+# PAM Clustering
+
+# Look at the data - how many clusters are necessary?
+tstats = teststats[, 2:5]
+p1 <- fviz_nbclust(testmat, FUN = hcut, method = "wss", 
+                   k.max = 10) +
+  ggtitle("(A) Elbow method")
+p2 <- fviz_nbclust(testmat, FUN = hcut, method = "silhouette", 
+                   k.max = 10) +
+  ggtitle("(B) Silhouette method")
+
+# Display plots side by side
+gridExtra::grid.arrange(p1, p2, nrow = 1)
+
+# Based on the within SS and average silhouette width, 2 or 3 clusters
+
+pamall5 = pam(alldist, k = 2, diss = TRUE, nstart = 100)
+pamall5$medoids
+pamall5$silinfo
+
+# One cluster is well-defined, 2 are less well-defined
+?pam
+pamall3 = pam(alldist, k = 3, diss = TRUE, nstart = 100)
+pamall3$medoids
+pamall3$silinfo
+
+fviz_silhouette(pamall3, label = TRUE) + ylab("Silhouette width") + theme(legend.position = "none", plot.title = element_blank(), axis.text.x = element_text(angle = 90))
+
+# The well-defined cluster contains %CD4+ ANYcytok+,%CD4+ totTNF+, %CD4+ totIFNg+, %CD4+ totIL2+, %CD8+ totIL22+
+# This is the same cluster identified during hierarchical clustering - negative treatment effect. Exclude these.
+
+# Based on the heat maps, %CD8+ totTNF+ as medoid 1 (dist row 5), %CD8+ totL22+ (dist row 10) as medoid 2
+pamall = pam(alldist, k = 2, diss = TRUE, medoids = c(5, 10), do.swap = FALSE)
+pamall$medoids
+pamall$silinfo
+
+
+# PR Comp
+
+prin_comp <- prcomp(testmat)
+explained_variance_ratio <- summary(prin_comp)[["importance"]]['Proportion of Variance',]
+explained_variance_ratio <- 100 * explained_variance_ratio
+components <- prin_comp[["x"]]
+components <- data.frame(components)
+components <- cbind(components, tmelt$variable)
+components$PC3 <- -components$PC3
+components$PC2 <- -components$PC2
+
+fviz_pca_biplot(prin_comp)
+
+?fviz_pca
+axis = list(showline=FALSE,
+            zeroline=FALSE,
+            gridcolor='#ffff',
+            ticklen=4,
+            titlefont=list(size=13))
+
+fig <- components %>%
+  plot_ly()  %>%
+  add_trace(
+    type = 'splom',
+    dimensions = list(
+      list(label=paste('PC 1 (',toString(round(explained_variance_ratio[1],1)),'%)',sep = ''), values=~PC1),
+      list(label=paste('PC 2 (',toString(round(explained_variance_ratio[2],1)),'%)',sep = ''), values=~PC2),
+      list(label=paste('PC 3 (',toString(round(explained_variance_ratio[3],1)),'%)',sep = ''), values=~PC3),
+      list(label=paste('PC 4 (',toString(round(explained_variance_ratio[4],1)),'%)',sep = ''), values=~PC4)
+    )#,
+    #color = ~iris$Species, colors = c('#636EFA','#EF553B','#00CC96')
+  ) %>%
+  style(diagonal = list(visible = FALSE)) %>%
+  layout(
+    legend=list(title=list(text='color')),
+    hovermode='closest',
+    dragmode= 'select',
+    plot_bgcolor='rgba(240,240,240, 0.95)',
+    xaxis=list(domain=NULL, showline=F, zeroline=F, gridcolor='#ffff', ticklen=4),
+    yaxis=list(domain=NULL, showline=F, zeroline=F, gridcolor='#ffff', ticklen=4),
+    xaxis2=axis,
+    xaxis3=axis,
+    xaxis4=axis,
+    yaxis2=axis,
+    yaxis3=axis,
+    yaxis4=axis
+  )
+
+fig
+
+# This doesn't work very well...
+
+# CD8 gives you one well-defined cluster, 2 is better in terms of average sil width
+pamall8 = pam(cd8dist, k = 2, diss = TRUE, nstart = 100)
+pamall8$medoids
+pamall8$silinfo
+
+fviz_silhouette(pamall8, label = TRUE) + ylab("Silhouette width") + theme(legend.position = "none", plot.title = element_blank(), axis.text.x = element_text(angle = 90))
+
+# %CD8+ totIFNg+, %CD8+ ANYcytok+, Bulk CD8+/% R7-RA-, Bulk CD8+/% R7-RA+, CD8 %Ki67+ is the well-defined cluster
+# This resembles the hierarchical clustering, but %CD8+ totIL22+ ends up in another cluster.
+# All of them have pretty strong antibiotic associations and negative/low feeding associations.
+# If you're interested in Cotramoxazole, then this is a good group to proceed with.
+
+# CD4 gives you three well-defined clusters with a good average sil width
+pamall4 = pam(cd4dist, k = 3, diss = TRUE, nstart = 100)
+pamall4$medoids
+pamall4$silinfo
+
+
+fviz_silhouette(pamall4, label = TRUE) + ylab("Silhouette width") + theme(legend.position = "none", plot.title = element_blank(), axis.text.x = element_text(angle = 90))
+
+
+# %CD4+ ANYcytok+, %CD4+ totTNF+, %CD4+ totIFNg+, %CD4+ totIL2+
+# Resembles hierarchical cluster but that one is without %CD4+ totTNF+
+# Negative association with treatment, positive association with QFT
+# Include these if you want to investigate QFT, but exclude if treatment is main focus
+
+# %CD4+ totIL22+, %CD4+ totIL17+
+# Same as hierarchical cluster, negative association with antibiotic
+# Very well-defined.
+
+# Bulk CD4+/% R7-RA+, CD4 %Ki67+, Bulk CD4+/% R7-RA-
+# Same as hierarchical cluster, strong negative associations with feeding.
+# Less well defined

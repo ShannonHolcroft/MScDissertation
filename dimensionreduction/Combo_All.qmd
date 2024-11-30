@@ -1,0 +1,1926 @@
+---
+title: "Outcome Selection (Clustering)"
+author: "Shannon Holcroft"
+format: revealjs
+---
+
+## Data Preparation
+
+Read in the data extracted from the fitted GLMMs for each group and variable of interest.
+
+```{r, echo=FALSE}
+
+library(tidyverse)
+library(reshape2)
+library(cluster)
+library(factoextra)
+library(ggdendro)
+
+# Read in combined data
+
+alldat = read.csv("combined_data.csv")[-1]
+
+# Drop very infrequently observed immune outcomes, antibody titres and assays
+
+droplist = c("%CD8+ totIL17+", "%CD8+ totIL2+", "%CD8+ totIL22+", "Baby Anti-BCG IgA (AUC)", "Baby Anti-BCG IgM (AUC)", "Baby Anti-BCG IgG (AUC)", "Elispot (BCG)")
+
+alldat = alldat[-which(alldat$Outcome %in% droplist), ]
+
+# Change names for display for certain immune outcomes
+
+namelist = c("bulk CD8+/% R7-RA-", "bulk CD8+/% R7-RA+", "bulk CD8+/% R7+RA-", "bulk CD8+/% R7+RA+", "CD8+ ANYcytok+")
+namechange = c("Bulk CD8+/% R7-RA-", "Bulk CD8+/% R7-RA+", "Bulk CD8+/% R7+RA-", "Bulk CD8+/% R7+RA+", "%CD8+ ANYcytok+")
+
+alldat = alldat %>% mutate(Outcome = if_else(Outcome %in% namelist, recode(Outcome, !!!setNames(namechange, namelist)), Outcome))
+
+# Separate into Group A and Group B
+
+datA = alldat %>% filter(Arm == "A")
+allA = unique(datA$Outcome)
+
+datB = alldat %>% filter(Arm == "B")
+allB = unique(datB$Outcome)
+
+# Separate by variables of interest
+
+dat1A = datA %>% filter(Group == "MVA85A") %>% filter(Coefficient %in% c("TreatmentMVA85A", "TreatmentMVA85A:Day56", "TreatmentMVA85A:Day365"))
+dat1B = datB %>% filter(Group == "MVA85A") %>% filter(Coefficient %in% c("TreatmentMVA85A", "TreatmentMVA85A:Day56", "TreatmentMVA85A:Day365"))
+
+dat2A = datA %>% filter(Group == "QFT") %>% filter(Coefficient %in% c("QFTPositive", "QFTPositive:Day56", "QFTPositive:Day365"))
+dat2B = datB %>% filter(Group == "QFT") %>% filter(Coefficient %in% c("QFTPositive", "QFTPositive:Day56", "QFTPositive:Day365"))
+
+dat3A = datA %>% filter(Group %in% c("FA - FA", "FA - BA"))
+
+# Retain specific comparisons of interest: FA0 in FA-BA, FA1 in FA-FA, FA2 in FA-FA, FA3 in FA-BA
+
+dat3.1.1A = dat3A %>% filter(Group == "FA - FA") %>% filter(Coefficient %in% c("FA1", "FA3", "FA1:Day56", "FA1:Day365", "FA3:Day56", "FA3:Day365", "FA1:Day63", "FA3:Day63"))
+dat3.1.2A = dat3A %>% filter(Group == "FA - BA") %>% filter(Coefficient %in% c("FA0", "FA2", "FA0:Day56", "FA2:Day56", "FA2:Day365",  "FA0:Day365", "FA0:Day63","FA2:Day63"))
+      
+dat3A = rbind(dat3.1.1A, dat3.1.2A)
+
+dat3B = datB %>% filter(Group %in% c("FA - FA", "FA - BA"))
+
+# Retain specific comparisons of interest: FA0 in FA-BA, FA1 in FA-FA, FA2 in FA-FA, FA3 in FA-BA
+
+dat3.1.1B = dat3B %>% filter(Group == "FA - FA") %>% filter(Coefficient %in% c("FA1", "FA3", "FA1:Day56", "FA1:Day365", "FA3:Day56", "FA3:Day365", "FA1:Day63", "FA3:Day63"))
+dat3.1.2B = dat3B %>% filter(Group == "FA - BA") %>% filter(Coefficient %in% c("FA0", "FA2", "FA0:Day56", "FA2:Day56", "FA2:Day365",  "FA0:Day365", "FA0:Day63","FA2:Day63"))
+      
+dat3B = rbind(dat3.1.1B, dat3.1.2B)
+
+dat4A = datA %>% filter(Coefficient %in% c("GenderM", "Day56:GenderM", "Day365:GenderM"))
+dat4B = datB %>% filter(Coefficient %in% c("GenderM", "Day56:GenderM", "Day365:GenderM"))
+
+# Create a clustering colour palette
+
+cols = c("darkgrey", "darkblue", "darkcyan", "#ff7f0e", "firebrick", "darkgreen","hotpink", "mediumorchid4")
+
+```
+
+Create data frames for clustering
+
+```{r}
+# Create long format data frames for groups A and B
+
+tmelt_1A = melt(dat1A) %>% filter(variable == "EstOverSE")
+tmelt_2A = melt(dat2A) %>% filter(variable == "EstOverSE")
+tmelt_3A = melt(dat3A) %>% filter(variable == "EstOverSE")
+tmelt_4A = melt(dat4A) %>% filter(variable == "EstOverSE")
+
+tmelt_1B = melt(dat1B) %>% filter(variable == "EstOverSE")
+tmelt_2B = melt(dat2B) %>% filter(variable == "EstOverSE")
+tmelt_3B = melt(dat3B) %>% filter(variable == "EstOverSE")
+tmelt_4B = melt(dat4B) %>% filter(variable == "EstOverSE")
+
+```
+
+Starting with MVA85A in Groups A and B, create Pearson distance matrices of standardised regression coefficients for clustering.
+
+```{r}
+
+mat1.2A = tmelt_1A[, c("Outcome", "Coefficient", "value")]
+
+# Restructure the data frame
+
+mat1.2A = mat1.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+mat1.2A_wide = mat1.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+mat1.2A = as.matrix(mat1.2A_wide[, 2:4], nrow = nrow(mat1.2A_wide), ncol = 3)
+row.names(mat1.2A) = mat1.2A_wide$Outcome
+dist1.2A = get_dist(mat1.2A, "pearson")
+
+mat1.2B = tmelt_1B[, c("Outcome", "Coefficient", "value")]
+
+# Restructure the data frame
+
+mat1.2B = mat1.2B %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+mat1.2B_wide = mat1.2B %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+mat1.2B = as.matrix(mat1.2B_wide[, 2:3], nrow = nrow(mat1.2B_wide), ncol = 2)
+row.names(mat1.2B) = mat1.2B_wide$Outcome
+dist1.2B = get_dist(mat1.2B, "pearson")
+```
+
+Perform aggomerative hierarchical clustering on Pearson distance matrices of standardised regression coefficients. Average linkage is specified.
+```{r}
+
+res1.2.hclustA = as.hclust(agnes(dist1.2A, diss = TRUE, method = "average"))
+
+res1.2.hclustB = as.hclust(agnes(dist1.2B, diss = TRUE, method = "average"))
+```
+
+There are 6 clusters for Group A. Perf+ Ki67+ CD4 is a singleton. There are 2 clusters for Group B.
+```{r}
+
+hcdata1.2A = dendro_data_k(res1.2.hclustA, 6)
+
+p = plot_ggdendro(hcdata1.2A,
+                  scale.color = cols,
+                   direction   = "rl",
+                   expand.y    = 0.2) 
+p + ylab("\n Link Height") + geom_hline(yintercept = 0.15, linetype = "solid", size = 1) + theme_bw() +
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"))
+  
+hcdata1.2B = dendro_data_k(res1.2.hclustB, 2)
+
+p = plot_ggdendro(hcdata1.2B,
+                  scale.color = c("darkblue", "darkgreen"),
+                   direction   = "rl",
+                   expand.y    = 0.2) 
+p + ylab("\n Link Height") + geom_hline(yintercept = 0.15, linetype = "solid", size = 1) + theme_bw() +
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+Extract the names of immune outcomes contained within each cluster. Number the clusters from top to bottom in order of appearance in the dendograms.
+
+```{r}
+
+clusters1.2A = cutree(res1.2.hclustA, k=6)
+
+
+names6 = names(clusters1.2A[clusters1.2A == 1])
+names4 = names(clusters1.2A[clusters1.2A == 2])
+names2 = names(clusters1.2A[clusters1.2A == 3])
+names5 = names(clusters1.2A[clusters1.2A == 4])
+names1 = names(clusters1.2A[clusters1.2A == 5])
+names3 = names(clusters1.2A[clusters1.2A == 6])
+
+clusters1.2B = cutree(res1.2.hclustB, k=2)
+
+
+names2B = names(clusters1.2B[clusters1.2B == 1])
+names1B = names(clusters1.2B[clusters1.2B == 2])
+
+
+```
+
+Perform a PCA on Cluster 1 in Group A. PC1 explains the majority of the variance in the input data.
+
+```{r}
+
+mat1.2A = tmelt_1A[, c("Outcome", "Coefficient", "value")]
+mat1.2A = mat1.2A %>% filter(Outcome %in% names1)
+
+# Restructure the data frame
+
+pca1.2A = mat1.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca1.2A_wide = pca1.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca1.2A_mat = as.matrix(pca1.2A_wide[, 2:4], nrow = nrow(pca1.2A_wide), ncol = 3)
+rownames(pca1.2A_mat) = pca1.2A_wide$Outcome
+
+pca1.2Ares = princomp(pca1.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca1.2Ares) # Component 1 should suffice
+
+fviz_eig(pca1.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+PC1 primarily describes the interaction between MVA85A priming and Day 56. This cluster likely contains immune outcomes showing group differences before BCG.
+
+```{r}
+fviz_contrib(pca1.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+```
+
+Bulk CD8 R7+RA- and GrB Ki67+ CD4 make larger contributions to PC1 than the uniform expectation. They are selected to the Cluster 1 subset.
+```{r}
+
+fviz_contrib(pca1.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+contrib1.2A.1 = fviz_contrib(pca1.2Ares, axes = 1, choice = "ind")
+pc1dat = contrib1.2A.1$data[which(contrib1.2A.1$data$contrib >= 30), ]
+#pc2dat = contrib1.2A.2$data[which(contrib1.2A.2$data$contrib >= 3), ]
+
+clust1Anames = as.character(unique(c(pc1dat$name)))
+
+mva_pca_set1 = clust1Anames
+```
+Perform a PCA on Cluster 2 in Group A. PC1 explains the majority of the variance in the input data.
+
+```{r}
+
+mat1.2A = tmelt_1A[, c("Outcome", "Coefficient", "value")]
+mat1.2A = mat1.2A %>% filter(Outcome %in% names2)
+
+# Restructure the data frame
+
+pca1.2A = mat1.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca1.2A_wide = pca1.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca1.2A_mat = as.matrix(pca1.2A_wide[, 2:4], nrow = nrow(pca1.2A_wide), ncol = 3)
+rownames(pca1.2A_mat) = pca1.2A_wide$Outcome
+
+pca1.2Ares = princomp(pca1.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca1.2Ares) # Component 1 should suffice
+
+fviz_eig(pca1.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+
+PC1 primarily describes the interaction between MVA85A priming and Day 56, but there is a smaller contribution by MVA85A priming 8 weeks after BCG than in Cluster 1.
+
+```{r}
+fviz_contrib(pca1.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+```
+
+CD4 IL-2 and Bulk CD8 R7+RA+ make larger contributions than expected under uniformity. They are selected as the Cluster 2 subset.
+```{r}
+fviz_contrib(pca1.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+```
+```{r}
+contrib1.2A.1 = fviz_contrib(pca1.2Ares, axes = 1, choice = "ind")
+pc1dat = contrib1.2A.1$data[which(contrib1.2A.1$data$contrib >= 20), ]
+
+clust2Anames = as.character(unique(c(pc1dat$name)))
+
+mva_pca_set2 = clust2Anames
+
+```
+
+Do not perform a PCA on the singlton Cluster 3 in Group A. Perf+ %of Ki67+CD4 is the subset for Cluster 3.
+
+```{r}
+clustA3names = names3
+mva_pca_set3 = clustA3names
+```
+
+Perform a PCA on Cluster 4. PC1 explains the majority of the variance in the input data.
+
+```{r}
+
+mat1.2A = tmelt_1A[, c("Outcome", "Coefficient", "value")]
+mat1.2A = mat1.2A %>% filter(Outcome %in% names4)
+
+# Restructure the data frame
+
+pca1.2A = mat1.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca1.2A_wide = pca1.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca1.2A_mat = as.matrix(pca1.2A_wide[, 2:4], nrow = nrow(pca1.2A_wide), ncol = 3)
+rownames(pca1.2A_mat) = pca1.2A_wide$Outcome
+
+pca1.2Ares = princomp(pca1.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca1.2Ares) # Component 1 should suffice
+
+fviz_eig(pca1.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+Cluster 4 primarily describes variance in input data by MVA85A priming at the time of BCG and when the infant is 1 year old.
+```{r}
+fviz_contrib(pca1.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+```
+
+Bulk CD4 R7-RA- and Bulk CD8 R7-RA- make large contributions and are selected as the Cluster 4 subset.
+```{r}
+fviz_contrib(pca1.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+```
+
+
+The names of these 3 immune outcomes are printed below.
+```{r}
+contrib1.2A.1 = fviz_contrib(pca1.2Ares, axes = 1, choice = "ind")
+pc1dat = contrib1.2A.1$data[which(contrib1.2A.1$data$contrib >= 10), ]
+
+clust4Anames = as.character(unique(c(pc1dat$name)))
+
+mva_pca_set4 = clust4Anames
+
+```
+
+PCA is applied to Cluster 5. PC1 explains the majority of the input variance.
+```{r}
+
+mat1.2A = tmelt_1A[, c("Outcome", "Coefficient", "value")]
+mat1.2A = mat1.2A %>% filter(Outcome %in% names5)
+
+# Restructure the data frame
+
+pca1.2A = mat1.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca1.2A_wide = pca1.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca1.2A_mat = as.matrix(pca1.2A_wide[, 2:4], nrow = nrow(pca1.2A_wide), ncol = 3)
+rownames(pca1.2A_mat) = pca1.2A_wide$Outcome
+
+pca1.2Ares = princomp(pca1.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca1.2Ares) # Component 1 should suffice
+
+fviz_eig(pca1.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+Cluster 5 primary explains MVA85A priming differences 8 weeks after BCG. Differences at the time of BCG also contribute.
+
+```{r}
+fviz_contrib(pca1.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+```
+
+CD8 TNF and GrB Ki67 NK make large contributions and are selected as the Cluster 5 subset.
+```{r}
+fviz_contrib(pca1.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+```
+
+
+```{r}
+contrib1.2A.1 = fviz_contrib(pca1.2Ares, axes = 1, choice = "ind")
+#contrib1.2A.2 = fviz_contrib(pca1.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib1.2A.1$data[which(contrib1.2A.1$data$contrib >= 20), ]
+#pc2dat = contrib1.2A.2$data[which(contrib1.2A.2$data$contrib >= 3), ]
+
+clust5Anames = as.character(unique(c(pc1dat$name)))
+
+mva_pca_set5 = clust5Anames
+
+```
+
+PCA is applied to Cluster 6. PC1 explains most variance in input data.
+
+```{r}
+
+mat1.2A = tmelt_1A[, c("Outcome", "Coefficient", "value")]
+mat1.2A = mat1.2A %>% filter(Outcome %in% names6)
+
+# Restructure the data frame
+
+pca1.2A = mat1.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca1.2A_wide = pca1.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca1.2A_mat = as.matrix(pca1.2A_wide[, 2:4], nrow = nrow(pca1.2A_wide), ncol = 3)
+rownames(pca1.2A_mat) = pca1.2A_wide$Outcome
+
+pca1.2Ares = princomp(pca1.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca1.2Ares) # Component 1 should suffice
+
+fviz_eig(pca1.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+# Look at component 1
+
+```
+Cluster 6 explains MVA85A priming differences at the time of BCG and 1 year of age.
+
+```{r}
+fviz_contrib(pca1.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+```
+
+Gr A Ki67 gd, CD4 totIFNg and GrA Ki67 NK make the largest contributions. They are selected to the Cluster 6 subset.
+```{r}
+
+fviz_contrib(pca1.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+```
+
+```{r}
+contrib1.2A.1 = fviz_contrib(pca1.2Ares, axes = 1, choice = "ind")
+
+pc1dat = contrib1.2A.1$data[which(contrib1.2A.1$data$contrib >= 10), ]
+
+clust6Anames = as.character(unique(c(pc1dat$name)))
+
+mva_pca_set6 = clust6Anames
+
+```
+
+Collect all the MVA85A cluster subsets
+```{r}
+mvaclusters = c(mva_pca_set1, mva_pca_set2, mva_pca_set3, mva_pca_set4, mva_pca_set5, mva_pca_set6)
+
+```
+
+Assuming that the subsets are independent, we can perform corrections within cluster. Retrieve the fitted models by cluster.
+
+```{r}
+
+# Cluster 1 models
+
+AM_C1.1 = glmmTMB(O20 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_C1.1 = summary(AM_C1.1)
+
+AM_C1.2 = glmmTMB(O27 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_C1.2 = summary(AM_C1.2)
+
+n1 = length(mva_pca_set1)
+v1.1 = varA[20]
+v1.2 = varA[27]
+
+# Cluster 2 models
+
+AM_C2.1 = glmmTMB(O4 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_C2.1 = summary(AM_C2.1)
+
+AM_C2.2 = glmmTMB(101 - O19 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_C2.2 = summary(AM_C2.2)
+
+n2 = length(mva_pca_set2)
+
+# Cluster 3 models
+
+AM_C3.1 = glmmTMB(O30 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_C3.1 = summary(AM_C3.1)
+
+n3 = length(mva_pca_set3)
+
+# Cluster 4 models
+
+AM_C4.1 = glmmTMB(O17 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_C4.1 = summary(AM_C4.1)
+
+AM_C4.2 = glmmTMB(O21 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_4.2 = summary(AM_C4.2)
+
+n4 = length(mva_pca_set4)
+
+# Cluster 5 models
+
+AM_5.1 = glmmTMB(O7 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_5.1 = summary(AM_5.1)
+
+AM_C5.2 = glmmTMB(101 - O37 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_C5.2 = summary(AM_C5.2)
+
+n5 = length(mva_pca_set5)
+
+# Cluster 6 models
+
+AM_C6.1 = glmmTMB(O3 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_C6.1 = summary(AM_C6.1)
+
+AM_C6.2 = glmmTMB(O31 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = poisson(link = "log"))
+AS_C6.2 = summary(AM_C6.2)
+
+AM_C6.3 = glmmTMB(101 - O36 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_C6.3 = summary(AM_C6.3)
+
+n6 = length(mva_pca_set6)
+
+
+```
+
+Create a contrast matrix 
+```{r}
+
+# Levels of the factors
+
+levels_treatment =  levels(groupA$Treatment)
+levels_time = levels(groupA$Time)
+
+# Create all combinations of the levels
+
+combinations = expand.grid(Time = levels_time, Treatment = levels_treatment)
+combination_names = paste(combinations$Treatment, combinations$Time, sep = "_")
+
+# Define the list of contrasts
+
+contrast_list = list(
+  
+  # Comparisons within Control
+  
+  "Control_T2_vs_T1" = setNames(c(1, -1, 0, 0, 0, 0), combination_names),
+  "Control_T2_vs_T3" = setNames(c(1, 0, -1, 0, 0, 0), combination_names),
+  "Control_T1_vs_T3" = setNames(c(0, 1, -1, 0, 0, 0), combination_names),
+  
+  # Comparisons within MVA85A
+  
+  "MVA85A_T2_vs_T1" = setNames(c(0, 0, 0, 1, -1, 0), combination_names),
+  "MVA85A_T2_vs_T3" = setNames(c(0, 0, 0, 1, 0, -1), combination_names),
+  "MVA85A_T1_vs_T3" = setNames(c(0, 0, 0, 0, 1, -1), combination_names),
+  
+  # Comparisons between Control and MVA85A
+  
+  "T2_Control_vs_MVA85A" = setNames(c(1, 0, 0, -1, 0, 0), combination_names),
+  "T1_Control_vs_MVA85A" = setNames(c(0, 1, 0, 0, -1, 0), combination_names),
+  "T3_Control_vs_MVA85A" = setNames(c(0, 0, 1, 0, 0, -1), combination_names)
+)
+
+contrast_list
+```
+
+```{r}
+
+emmC1.1 = emmeans(AM_C1.1, ~ Treatment * Time)
+emmC1.2 = emmeans(AM_C1.2, ~ Treatment * Time)
+
+# Apply custom contrasts
+contrastsC1.1 = data.frame(contrast(emmC1.1, method = contrast_list, adjust = "none"))
+contrastsC1.2 = data.frame(contrast(emmC1.2, method = contrast_list, adjust = "none"))
+
+contrastsC1.1$Outcome = v1.1
+contrastsC1.2$Outcome = v1.2
+
+clusterC1res = rbind(contrastsC1.1, contrastsC1.2)
+clusterC1res = clusterC1res %>% arrange(p.value)
+
+clusterC1res$BH = p.adjust(clusterC1res$p.value, method = "BH", n = length(clusterC1res$p.value))
+clusterC1res$BY = p.adjust(clusterC1res$p.value, method = "BY", n = length(clusterC1res$p.value))
+
+```
+
+
+```{r}
+
+mat1.2A = tmelt_1A[, c("Outcome", "Coefficient", "value")]
+mat1.2A = mat1.2A %>% filter(Outcome %in% names6)
+
+# Restructure the data frame
+
+pca1.2A = mat1.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca1.2A_wide = pca1.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca1.2A_mat = as.matrix(pca1.2A_wide[, 2:4], nrow = nrow(pca1.2A_wide), ncol = 3)
+rownames(pca1.2A_mat) = pca1.2A_wide$Outcome
+
+pca1.2Ares = princomp(pca1.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca1.2Ares) # Component 1 should suffice
+
+fviz_eig(pca1.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+```{r}
+fviz_contrib(pca1.2Ares, axes = 1, choice = "ind") + ylim(0, 50) + theme_minimal() + theme(axis.text.x = element_text(angle = 90), axis.title.x = element_blank(), title = element_blank())
+
+# There are 2 outcomes
+
+```
+
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib1.2A.1 = fviz_contrib(pca1.2Ares, axes = 1, choice = "ind")
+#contrib1.2A.2 = fviz_contrib(pca1.2Ares, axes = 2, choice = "ind")
+
+pc2dat = contrib1.2A.1$data[which(contrib1.2A.1$data$contrib >= 17), ]
+#pc2dat = contrib1.2A.2$data[which(contrib1.2A.2$data$contrib >= 3), ]
+
+pcnames2 = as.character(unique(c(pc2dat$name)))
+
+mva_pca_set = pcnames2
+
+```
+
+
+```{r}
+
+# Group 3
+
+names3 = names(clusters1.2A[clusters1.2A == 3])
+
+dist1.2Amat3 = as.matrix(dist1.2A)
+dist1.2Amat3 = dist1.2Amat2[which(rownames(dist1.2Amat2) %in% names3), ]
+
+euclid1.2Amat3 = as.matrix(dist(dist1.2Amat2))
+euclid1.2Adf3 = data.frame(euclid1.2Amat2)
+
+euclid1.2Adf3$SS = apply(euclid1.2Adf3, 1, function(x) sum(x^2))
+
+euclid1.2Adf3[which.min(euclid1.2Adf3$SS), ]
+
+```
+
+```{r}
+
+mat1.2A = tmelt_1A[, c("Outcome", "Coefficient", "value")]
+mat1.2A = mat1.2A %>% filter(Outcome %in% names3)
+
+# Restructure the data frame
+
+pca1.2A = mat1.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca1.2A_wide = pca1.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca1.2A_mat = as.matrix(pca1.2A_wide[, 2:4], nrow = nrow(pca1.2A_wide), ncol = 3)
+rownames(pca1.2A_mat) = pca1.2A_wide$Outcome
+
+pca1.2Ares = princomp(pca1.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca1.2Ares) # Component 1 should suffice
+
+fviz_eig(pca1.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1
+
+```
+
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib1.2A.1 = fviz_contrib(pca1.2Ares, axes = 1, choice = "ind")
+#contrib1.2A.2 = fviz_contrib(pca1.2Ares, axes = 2, choice = "ind")
+
+pc3dat = contrib1.2A.1$data[which(contrib1.2A.1$data$contrib >= 20), ]
+#pc2dat = contrib1.2A.2$data[which(contrib1.2A.2$data$contrib >= 3), ]
+
+pcnames3 = as.character(unique(c(pc3dat$name)))
+
+mva_pca_set = pcnames3
+
+```
+
+
+Get distance matrices
+
+```{r}
+
+mat2.2A = tmelt_2A[, c("Outcome", "Coefficient", "value")]
+
+# Restructure the data frame
+
+mat2.2A = mat2.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+mat2.2A_wide = mat2.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+mat2.2A = as.matrix(mat2.2A_wide[, 2:4], nrow = nrow(mat2.2A_wide), ncol = 3)
+row.names(mat2.2A) = mat2.2A_wide$Outcome
+dist2.2A = get_dist(mat2.2A, "pearson")
+
+mat2.2B = tmelt_2B[, c("Outcome", "Coefficient", "value")]
+
+# Restructure the data frame
+
+mat2.2B = mat2.2B %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+mat2.2B_wide = mat2.2B %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+mat2.2B = as.matrix(mat2.2B_wide[, 2:3], nrow = nrow(mat2.2B_wide), ncol = 2)
+row.names(mat2.2B) = mat2.2B_wide$Outcome
+dist2.2B = get_dist(mat2.2B, "pearson")
+```
+
+```{r}
+
+res2.2.hclustA = as.hclust(agnes(dist2.2A, diss = TRUE, method = "average"))
+res2.2.hclustB = as.hclust(agnes(dist2.2B, diss = TRUE, method = "average"))
+```
+
+There are effectively 7 groups. There are 2 singletons.
+```{r}
+
+hcdata2.2A = dendro_data_k(res2.2.hclustA, 7)
+
+p = plot_ggdendro(hcdata2.2A,
+                  scale.color = cols,
+                   direction   = "rl",
+                   expand.y    = 0.2) 
+p + ylab("\n Link Height") + geom_hline(yintercept = 0.15, linetype = "solid", size = 1) + theme_bw() +
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"))
+  
+hcdata2.2B = dendro_data_k(res2.2.hclustB, 2)
+
+p = plot_ggdendro(hcdata2.2B,
+                  scale.color = c("darkblue", "darkgreen"),
+                   direction   = "rl",
+                   expand.y    = 0.2) 
+p + ylab("\n Link Height") + geom_hline(yintercept = 0.15, linetype = "solid", size = 1) + theme_bw() +
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+```{r}
+
+clusters2.2A = cutree(res2.2.hclust, k=7)
+
+# Group 1
+
+names1 = names(clusters2.2A[clusters2.2A == 1])
+names2 = names(clusters2.2A[clusters2.2A == 2])
+names3 = names(clusters2.2A[clusters2.2A == 3])
+names4 = names(clusters2.2A[clusters2.2A == 4])
+names5 = names(clusters2.2A[clusters2.2A == 5])
+names6 = names(clusters2.2A[clusters2.2A == 6])
+names7 = names(clusters2.2A[clusters2.2A == 7])
+
+```
+
+```{r}
+
+mat2.2A = tmelt_2A[, c("Outcome", "Coefficient", "value")]
+mat2.2A = mat2.2A %>% filter(Outcome %in% names1)
+
+# Restructure the data frame
+
+pca2.2A = mat2.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca2.2A_wide = pca2.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca2.2A_mat = as.matrix(pca2.2A_wide[, 2:4], nrow = nrow(pca2.2A_wide), ncol = 3)
+rownames(pca2.2A_mat) = pca2.2A_wide$Outcome
+
+pca2.2Ares = princomp(pca2.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca2.2Ares) # Component 1 should suffice
+
+fviz_eig(pca2.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca2.2Ares, axes = 1, choice = "var")
+fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib2.2A.1 = fviz_contrib(pca2.2Ares, axes = 1, choice = "ind")
+contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib2.2A.1$data[which(contrib2.2A.1$data$contrib >= 20), ]
+pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 20), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name, pc2dat$name)))
+
+qft_pca_set1 = pcnames1
+
+```
+
+```{r}
+
+mat2.2A = tmelt_2A[, c("Outcome", "Coefficient", "value")]
+mat2.2A = mat2.2A %>% filter(Outcome %in% names2)
+
+# Restructure the data frame
+
+pca2.2A = mat2.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca2.2A_wide = pca2.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca2.2A_mat = as.matrix(pca2.2A_wide[, 2:4], nrow = nrow(pca2.2A_wide), ncol = 3)
+rownames(pca2.2A_mat) = pca2.2A_wide$Outcome
+
+pca2.2Ares = princomp(pca2.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca2.2Ares) # Component 1 should suffice
+
+fviz_eig(pca2.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca2.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib2.2A.1 = fviz_contrib(pca2.2Ares, axes = 1, choice = "ind")
+#contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib2.2A.1$data[which(contrib2.2A.1$data$contrib >= 30), ]
+#pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 20), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+qft_pca_set2 = pcnames1
+
+```
+
+```{r}
+
+mat2.2A = tmelt_2A[, c("Outcome", "Coefficient", "value")]
+mat2.2A = mat2.2A %>% filter(Outcome %in% names3)
+
+# Restructure the data frame
+
+pca2.2A = mat2.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca2.2A_wide = pca2.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca2.2A_mat = as.matrix(pca2.2A_wide[, 2:4], nrow = nrow(pca2.2A_wide), ncol = 3)
+rownames(pca2.2A_mat) = pca2.2A_wide$Outcome
+
+pca2.2Ares = princomp(pca2.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca2.2Ares) # Component 1 should suffice
+
+fviz_eig(pca2.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca2.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib2.2A.1 = fviz_contrib(pca2.2Ares, axes = 1, choice = "ind")
+#contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib2.2A.1$data[which(contrib2.2A.1$data$contrib >= 5), ]
+#pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 20), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+qft_pca_set3 = pcnames1
+
+```
+
+```{r}
+
+mat2.2A = tmelt_2A[, c("Outcome", "Coefficient", "value")]
+mat2.2A = mat2.2A %>% filter(Outcome %in% names4)
+
+# Restructure the data frame
+
+pca2.2A = mat2.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca2.2A_wide = pca2.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca2.2A_mat = as.matrix(pca2.2A_wide[, 2:4], nrow = nrow(pca2.2A_wide), ncol = 3)
+rownames(pca2.2A_mat) = pca2.2A_wide$Outcome
+
+pca2.2Ares = princomp(pca2.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca2.2Ares) # Component 1 should suffice
+
+fviz_eig(pca2.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca2.2Ares, axes = 1, choice = "var")
+fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib2.2A.1 = fviz_contrib(pca2.2Ares, axes = 1, choice = "ind")
+contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib2.2A.1$data[which(contrib2.2A.1$data$contrib >= 10), ]
+pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 10), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name, pc2dat$name)))
+
+qft_pca_set4 = pcnames1
+
+```
+
+```{r}
+qftclusters = c(qft_pca_set1, qft_pca_set2, qft_pca_set3, qft_pca_set4, names5, names6, names7)
+```
+
+
+```{r}
+
+mat3.2A = tmelt_3A[, c("Outcome", "Coefficient", "value")]
+
+# Restructure the data frame
+
+mat3.2A = mat3.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+mat3.2A_wide = mat3.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+mat3.2A = as.matrix(mat3.2A_wide[, 2:4], nrow = nrow(mat3.2A_wide), ncol = 3)
+row.names(mat3.2A) = mat3.2A_wide$Outcome
+dist3.2A = get_dist(mat3.2A, "pearson")
+
+mat3.2B = tmelt_3B[, c("Outcome", "Coefficient", "value")]
+
+# Restructure the data frame
+
+mat3.2B = mat3.2B %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+mat3.2B_wide = mat3.2B %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+mat3.2B = as.matrix(mat3.2B_wide[, 2:3], nrow = nrow(mat3.2A_wide), ncol = 2)
+row.names(mat3.2B) = mat3.2B_wide$Outcome
+dist3.2B = get_dist(mat3.2B, "pearson")
+```
+
+```{r}
+
+res3.2.hclustA = as.hclust(agnes(dist3.2A, diss = TRUE, method = "average"))
+res3.2.hclustB = as.hclust(agnes(dist3.2B, diss = TRUE, method = "average"))
+```
+
+There are effectively 7 groups. Perf+ Ki67+ CD4 is a singleton, but the others require representatives.
+```{r}
+
+hcdata3.2A = dendro_data_k(res3.2.hclustA, 7)
+
+p = plot_ggdendro(hcdata3.2A,
+                  scale.color = cols,
+                   direction   = "rl",
+                   expand.y    = 0.2) 
+p + ylab("\n Link Height") + geom_hline(yintercept = 0.15, linetype = "solid", size = 1) + theme_bw() +
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"))
+  
+hcdata3.2B = dendro_data_k(res3.2.hclustB, 2)
+
+p = plot_ggdendro(hcdata3.2B,
+                  scale.color = c("darkblue", "darkgreen"),
+                   direction   = "rl",
+                   expand.y    = 0.2) 
+p + ylab("\n Link Height") + geom_hline(yintercept = 0.15, linetype = "solid", size = 1) + theme_bw() +
+  theme(axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, family = "Arial"),
+        axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+```{r}
+
+clusters3.2A = cutree(res3.2.hclust, k=7)
+
+# Group 1
+
+names1 = names(clusters3.2A[clusters3.2A == 1])
+names2 = names(clusters3.2A[clusters3.2A == 2])
+names3 = names(clusters3.2A[clusters3.2A == 3])
+names4 = names(clusters3.2A[clusters3.2A == 4])
+names5 = names(clusters3.2A[clusters3.2A == 5])
+names6 = names(clusters3.2A[clusters3.2A == 6])
+names7 = names(clusters3.2A[clusters3.2A == 7])
+
+```
+
+```{r}
+
+mat3.2A = tmelt_3A[, c("Outcome", "Coefficient", "value")]
+mat3.2A = mat3.2A %>% filter(Outcome %in% names1)
+
+# Restructure the data frame
+
+pca3.2A = mat3.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca3.2A_wide = pca3.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca3.2A_mat = as.matrix(pca3.2A_wide[, 2:4], nrow = nrow(pca3.2A_wide), ncol = 3)
+rownames(pca3.2A_mat) = pca3.2A_wide$Outcome
+
+pca3.2Ares = princomp(pca3.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca3.2Ares) # Component 1 should suffice
+
+fviz_eig(pca3.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca3.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib3.2A.1 = fviz_contrib(pca3.2Ares, axes = 1, choice = "ind")
+#contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib3.2A.1$data[which(contrib3.2A.1$data$contrib >= 10), ]
+#pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 20), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+fa_pca_set1 = pcnames1
+
+```
+
+```{r}
+
+mat3.2A = tmelt_3A[, c("Outcome", "Coefficient", "value")]
+mat3.2A = mat3.2A %>% filter(Outcome %in% names2)
+
+# Restructure the data frame
+
+pca3.2A = mat3.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca3.2A_wide = pca3.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca3.2A_mat = as.matrix(pca3.2A_wide[, 2:4], nrow = nrow(pca3.2A_wide), ncol = 3)
+rownames(pca3.2A_mat) = pca3.2A_wide$Outcome
+
+pca3.2Ares = princomp(pca3.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca3.2Ares) # Component 1 should suffice
+
+fviz_eig(pca3.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca3.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib3.2A.1 = fviz_contrib(pca3.2Ares, axes = 1, choice = "ind")
+#contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib3.2A.1$data[which(contrib3.2A.1$data$contrib >= 15), ]
+#pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 20), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+fa_pca_set2 = pcnames1
+
+```
+
+```{r}
+
+mat3.2A = tmelt_3A[, c("Outcome", "Coefficient", "value")]
+mat3.2A = mat3.2A %>% filter(Outcome %in% names3)
+
+# Restructure the data frame
+
+pca3.2A = mat3.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca3.2A_wide = pca3.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca3.2A_mat = as.matrix(pca3.2A_wide[, 2:4], nrow = nrow(pca3.2A_wide), ncol = 3)
+rownames(pca3.2A_mat) = pca3.2A_wide$Outcome
+
+pca3.2Ares = princomp(pca3.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca3.2Ares) # Component 1 should suffice
+
+fviz_eig(pca3.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca3.2Ares, axes = 1, choice = "var")
+fviz_contrib(pca3.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib3.2A.1 = fviz_contrib(pca3.2Ares, axes = 1, choice = "ind")
+contrib3.2A.2 = fviz_contrib(pca3.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib3.2A.1$data[which(contrib3.2A.1$data$contrib >= 15), ]
+pc2dat = contrib3.2A.2$data[which(contrib3.2A.2$data$contrib >= 15), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name, pc2dat$name)))
+
+fa_pca_set3 = pcnames1
+
+```
+
+```{r}
+
+mat3.2A = tmelt_3A[, c("Outcome", "Coefficient", "value")]
+mat3.2A = mat3.2A %>% filter(Outcome %in% names5)
+
+# Restructure the data frame
+
+pca3.2A = mat3.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca3.2A_wide = pca3.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca3.2A_mat = as.matrix(pca3.2A_wide[, 2:4], nrow = nrow(pca3.2A_wide), ncol = 3)
+rownames(pca3.2A_mat) = pca3.2A_wide$Outcome
+
+pca3.2Ares = princomp(pca3.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca3.2Ares) # Component 1 should suffice
+
+fviz_eig(pca3.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca3.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib3.2A.1 = fviz_contrib(pca3.2Ares, axes = 1, choice = "ind")
+#contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib3.2A.1$data[which(contrib3.2A.1$data$contrib >= 20), ]
+#pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 10), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+fa_pca_set5 = pcnames1
+
+```
+
+```{r}
+faclusters = c(fa_pca_set1, fa_pca_set2, fa_pca_set3, names4, fa_pca_set5, names6, names7)
+
+"Bulk CD4+/% R7+RA-" "Bulk CD8+/% R7-RA-"
+```
+
+```{r}
+
+mat4.2A = tmelt_4A[, c("Outcome", "Group", "Coefficient", "value")]
+
+# Restructure the data frame
+
+mat4.2A$OutcomeGroup = paste(mat4.2A$Outcome, mat4.2A$Group)
+mat4.2A2 = mat4.2A[, c("OutcomeGroup", "Coefficient", "value")]
+
+mat4.2A2_wide = mat4.2A2 %>%
+  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
+
+mat4.2A2 = as.matrix(mat4.2A2_wide[, 2:4], nrow = nrow(mat4.2A2_wide), ncol = 3)
+row.names(mat4.2A2) = mat4.2A_wide$OutcomeGroup
+dist4.2A = get_dist(mat4.2A2, "pearson")
+```
+
+
+```{r}
+
+res4.2.hclust = as.hclust(agnes(dist4.2A, diss = TRUE, method = "average"))
+```
+
+There are effectively 7 groups. Perf+ Ki67+ CD4 is a singleton, but the others require representatives.
+```{r}
+
+hcdata4.2 = dendro_data_k(res4.2.hclust, 10)
+
+p = plot_ggdendro(hcdata4.2,
+                   direction   = "rl",
+                   expand.y    = 0.2) 
+p + ylab("Link Height") + geom_hline(yintercept = 0.1) + theme(axis.title.y = element_blank())
+
+```
+
+```{r}
+
+clusters4.2A = cutree(res4.2.hclust, k=10)
+
+# Partial matches to find
+matches = unique(datA$Group)
+
+# Function to drop content after finding a partial match
+drop_after_match = function(string, matches) {
+  # Create a pattern that matches any of the words in 'matches'
+  pattern = paste(matches, collapse = "|")
+  # Use 'sub()' to drop everything after and including the matched word
+  sub(paste0("(.*?)\\s+(", pattern, ").*"), "\\1", string)
+}
+
+# Apply the function to the list of strings
+pcnames5_split = unique(lapply(pcnames5, drop_after_match, matches))
+
+gender_pca_set = pcnames5_split
+
+# Group 1
+
+names1 = names(clusters4.2A[clusters4.2A == 1])
+names1split = unique(lapply(names1, drop_after_match, matches))
+
+names2 = names(clusters4.2A[clusters4.2A == 2])
+names2split = unique(lapply(names2, drop_after_match, matches))
+
+names3 = names(clusters4.2A[clusters4.2A == 3])
+names3split = unique(lapply(names3, drop_after_match, matches))
+
+names4 = names(clusters4.2A[clusters4.2A == 4])
+names4split = unique(lapply(names4, drop_after_match, matches))
+
+names5 = names(clusters4.2A[clusters4.2A == 5])
+names5split = unique(lapply(names5, drop_after_match, matches))
+
+names6 = names(clusters4.2A[clusters4.2A == 6])
+names6split = unique(lapply(names6, drop_after_match, matches))
+
+names7 = names(clusters4.2A[clusters4.2A == 7])
+names7split = unique(lapply(names7, drop_after_match, matches))
+
+names8 = names(clusters4.2A[clusters4.2A == 8])
+names8split = unique(lapply(names8, drop_after_match, matches))
+
+names9 = names(clusters4.2A[clusters4.2A == 9])
+names9split = unique(lapply(names9, drop_after_match, matches))
+
+names10 = names(clusters4.2A[clusters4.2A == 10])
+names10split = unique(lapply(names10, drop_after_match, matches))
+
+```
+
+```{r}
+
+mat4.2A = tmelt_4A[, c("Outcome", "Coefficient", "value")]
+mat4.2A = mat4.2A %>% filter(Outcome %in% names1split)
+
+# Restructure the data frame
+
+pca4.2A = mat4.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca4.2A_wide = pca4.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca4.2A_mat = as.matrix(pca4.2A_wide[, 2:4], nrow = nrow(pca4.2A_wide), ncol = 3)
+rownames(pca4.2A_mat) = pca4.2A_wide$Outcome
+
+pca4.2Ares = princomp(pca4.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Ares) # Component 1 should suffice
+
+fviz_eig(pca4.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca4.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib4.2A.1 = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+#contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2A.1$data[which(contrib4.2A.1$data$contrib >= 20), ]
+#pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 20), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_pca_set1 = pcnames1
+
+```
+
+```{r}
+
+mat4.2A = tmelt_4A[, c("Outcome", "Coefficient", "value")]
+mat4.2A = mat4.2A %>% filter(Outcome %in% names2split)
+
+# Restructure the data frame
+
+pca4.2A = mat4.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca4.2A_wide = pca4.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca4.2A_mat = as.matrix(pca4.2A_wide[, 2:4], nrow = nrow(pca4.2A_wide), ncol = 3)
+rownames(pca4.2A_mat) = pca4.2A_wide$Outcome
+
+pca4.2Ares = princomp(pca4.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Ares) # Component 1 should suffice
+
+fviz_eig(pca4.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca4.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib4.2A.1 = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+#contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2A.1$data[which(contrib4.2A.1$data$contrib >= 8), ]
+#pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 20), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_pca_set2 = pcnames1
+
+```
+
+```{r}
+
+mat4.2A = tmelt_4A[, c("Outcome", "Coefficient", "value")]
+mat4.2A = mat4.2A %>% filter(Outcome %in% names3split)
+
+# Restructure the data frame
+
+pca4.2A = mat4.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca4.2A_wide = pca4.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca4.2A_mat = as.matrix(pca4.2A_wide[, 2:4], nrow = nrow(pca4.2A_wide), ncol = 3)
+rownames(pca4.2A_mat) = pca4.2A_wide$Outcome
+
+pca4.2Ares = princomp(pca4.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Ares) # Component 1 should suffice
+
+fviz_eig(pca4.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca4.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca3.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib4.2A.1 = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+#contrib3.2A.2 = fviz_contrib(pca3.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2A.1$data[which(contrib4.2A.1$data$contrib >= 10), ]
+#pc2dat = contrib3.2A.2$data[which(contrib3.2A.2$data$contrib >= 15), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_pca_set3 = pcnames1
+
+```
+
+```{r}
+
+mat4.2A = tmelt_4A[, c("Outcome", "Coefficient", "value")]
+mat4.2A = mat4.2A %>% filter(Outcome %in% names4split)
+
+# Restructure the data frame
+
+pca4.2A = mat4.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca4.2A_wide = pca4.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca4.2A_mat = as.matrix(pca4.2A_wide[, 2:4], nrow = nrow(pca4.2A_wide), ncol = 3)
+rownames(pca4.2A_mat) = pca4.2A_wide$Outcome
+
+pca4.2Ares = princomp(pca4.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Ares) # Component 1 should suffice
+
+fviz_eig(pca4.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca4.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib4.2A.1 = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+#contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2A.1$data[which(contrib4.2A.1$data$contrib >= 20), ]
+#pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 10), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_pca_set4 = pcnames1
+
+```
+
+```{r}
+
+mat4.2A = tmelt_4A[, c("Outcome", "Coefficient", "value")]
+mat4.2A = mat4.2A %>% filter(Outcome %in% names5split)
+
+# Restructure the data frame
+
+pca4.2A = mat4.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca4.2A_wide = pca4.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca4.2A_mat = as.matrix(pca4.2A_wide[, 2:4], nrow = nrow(pca4.2A_wide), ncol = 3)
+rownames(pca4.2A_mat) = pca4.2A_wide$Outcome
+
+pca4.2Ares = princomp(pca4.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Ares) # Component 1 should suffice
+
+fviz_eig(pca4.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca4.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib4.2A.1 = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+#contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2A.1$data[which(contrib4.2A.1$data$contrib >= 40), ]
+#pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 10), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_pca_set5 = pcnames1
+
+```
+
+```{r}
+
+mat4.2A = tmelt_4A[, c("Outcome", "Coefficient", "value")]
+mat4.2A = mat4.2A %>% filter(Outcome %in% names6split)
+
+# Restructure the data frame
+
+pca4.2A = mat4.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca4.2A_wide = pca4.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca4.2A_mat = as.matrix(pca4.2A_wide[, 2:4], nrow = nrow(pca4.2A_wide), ncol = 3)
+rownames(pca4.2A_mat) = pca4.2A_wide$Outcome
+
+pca4.2Ares = princomp(pca4.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Ares) # Component 1 should suffice
+
+fviz_eig(pca4.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca4.2Ares, axes = 1, choice = "var")
+fviz_contrib(pca4.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib4.2A.1 = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+contrib4.2A.2 = fviz_contrib(pca4.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2A.1$data[which(contrib4.2A.1$data$contrib >= 20), ]
+pc2dat = contrib4.2A.2$data[which(contrib4.2A.2$data$contrib >= 20), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name, pc2dat$name)))
+
+sex_pca_set6 = pcnames1
+
+```
+
+```{r}
+
+mat4.2A = tmelt_4A[, c("Outcome", "Coefficient", "value")]
+mat4.2A = mat4.2A %>% filter(Outcome %in% names7split)
+
+# Restructure the data frame
+
+pca4.2A = mat4.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca4.2A_wide = pca4.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca4.2A_mat = as.matrix(pca4.2A_wide[, 2:4], nrow = nrow(pca4.2A_wide), ncol = 3)
+rownames(pca4.2A_mat) = pca4.2A_wide$Outcome
+
+pca4.2Ares = princomp(pca4.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Ares) # Component 1 should suffice
+
+fviz_eig(pca4.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca4.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca4.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib4.2A.1 = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+#contrib4.2A.2 = fviz_contrib(pca4.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2A.1$data[which(contrib4.2A.1$data$contrib >= 20), ]
+#pc2dat = contrib4.2A.2$data[which(contrib4.2A.2$data$contrib >= 20), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_pca_set7 = pcnames1
+
+```
+
+```{r}
+
+mat4.2A = tmelt_4A[, c("Outcome", "Coefficient", "value")]
+mat4.2A = mat4.2A %>% filter(Outcome %in% names8split)
+
+# Restructure the data frame
+
+pca4.2A = mat4.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca4.2A_wide = pca4.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca4.2A_mat = as.matrix(pca4.2A_wide[, 2:4], nrow = nrow(pca4.2A_wide), ncol = 3)
+rownames(pca4.2A_mat) = pca4.2A_wide$Outcome
+
+pca4.2Ares = princomp(pca4.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Ares) # Component 1 should suffice
+
+fviz_eig(pca4.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca4.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib4.2A.1 = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+#contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2A.1$data[which(contrib4.2A.1$data$contrib >= 20), ]
+#pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 10), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_pca_set8 = pcnames1
+
+```
+
+```{r}
+
+mat4.2A = tmelt_4A[, c("Outcome", "Coefficient", "value")]
+mat4.2A = mat4.2A %>% filter(Outcome %in% names9split)
+
+# Restructure the data frame
+
+pca4.2A = mat4.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca4.2A_wide = pca4.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca4.2A_mat = as.matrix(pca4.2A_wide[, 2:4], nrow = nrow(pca4.2A_wide), ncol = 3)
+rownames(pca4.2A_mat) = pca4.2A_wide$Outcome
+
+pca4.2Ares = princomp(pca4.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Ares) # Component 1 should suffice
+
+fviz_eig(pca4.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1 & 2
+
+```
+
+```{r}
+fviz_contrib(pca4.2Ares, axes = 1, choice = "var")
+#fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+```
+The names of these 2 immune outcomes are printed below.
+```{r}
+contrib4.2A.1 = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+#contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2A.1$data[which(contrib4.2A.1$data$contrib >= 30), ]
+#pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 10), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_pca_set9 = pcnames1
+
+```
+
+```{r}
+sexclusters = c(sex_pca_set1, sex_pca_set2, sex_pca_set3, sex_pca_set4, sex_pca_set5, sex_pca_set6, sex_pca_set7, sex_pca_set8, sex_pca_set9, names10split)
+```
+
+```{r}
+
+# Group A set comparison
+
+Aset_list = list(MVA85A = mvaclusters, QFT = qftclusters, FA = faclusters, Sex = sexclusters)
+
+Aresult = sapply(allA, function(x) {
+  sapply(Aset_list, function(vec) as.numeric(x %in% vec))
+})
+
+Aset_res = t(Aresult)
+Amelt = melt(Aset_res)
+colnames(Amelt) = c("Outcome", "Variable", "Indicator")
+Amelt$Indicator = as.logical(Amelt$Indicator)
+
+library(extrafont)
+loadfonts(device = "win")  # For Windows users
+windowsFonts()
+
+ggplot(Amelt, aes(x = Variable, y = reorder(Outcome, Indicator), fill = Indicator)) +
+  geom_tile(color = "black") + theme_minimal() +
+  theme(axis.text.y = element_text(size=9, family = "TT Arial"),
+        axis.text.x = element_text(size=10, angle = 0, family = "TT Arial", face = "bold"),
+        axis.title.y = element_blank(), axis.title.x = element_blank(), legend.position = "none") +
+scale_fill_manual(name = "Selected", breaks = c("FALSE", "TRUE"), values = c("lightgrey", "darkcyan"))
+
+```
+
+
+```{r}
+
+mat1.2B = tmelt_1B[, c("Outcome", "Coefficient", "value")]
+
+# Restructure the data frame
+
+mat1.2B = mat1.2B %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+mat1.2B_wide = mat1.2B %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+mat1.2B = as.matrix(mat1.2B_wide[, 2:3], nrow = nrow(mat1.2A_wide), ncol = 2)
+row.names(mat1.2B) = mat1.2B_wide$Outcome
+dist1.2B = get_dist(mat1.2B, "pearson")
+
+```
+
+```{r}
+
+res1.2.hclustB = as.hclust(agnes(dist1.2B, diss = TRUE, method = "average"))
+```
+
+There are 2 groups.
+```{r}
+
+hcdata1.2B = dendro_data_k(res1.2.hclustB, 2)
+
+p = plot_ggdendroh(hcdata1.2B,
+                   direction   = "rl",
+                   expand.y    = 0.2) 
+p + ylab("\n Link Height") + geom_hline(yintercept = 0.15, linetype = "solid", size = 1) + theme_minimal() + theme(axis.title.y = element_blank())
+
+
+```
+
+```{r}
+
+clusters1.2B = cutree(res1.2.hclustB, k=2)
+
+# Group 1
+
+names1 = names(clusters1.2B[clusters1.2B == 1])
+names2 = names(clusters1.2B[clusters1.2B == 2])
+
+
+```
+
+CD4+ any is the most similar to all other objects in the cluster.
+
+```{r}
+
+mat1.2B = tmelt_1B[, c("Outcome", "Coefficient", "value")]
+mat1.2B = mat1.2B %>% filter(Outcome %in% names1)
+
+# Restructure the data frame
+
+pca1.2B = mat1.2B %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca1.2B_wide = pca1.2B %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca1.2B_mat = as.matrix(pca1.2B_wide[, 2:3], nrow = nrow(pca1.2B_wide), ncol = 2)
+rownames(pca1.2B_mat) = pca1.2B_wide$Outcome
+
+pca1.2Bres = princomp(pca1.2B_mat, cor = TRUE, scores = TRUE)
+summary(pca1.2Bres) # Component 1 should suffice
+
+fviz_eig(pca1.2Bres, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1
+
+```
+
+```{r}
+
+mat1.2B = tmelt_1B[, c("Outcome", "Coefficient", "value")]
+mat1.2B = mat1.2B %>% filter(Outcome %in% names2)
+
+# Restructure the data frame
+
+pca1.2B = mat1.2B %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca1.2B_wide = pca1.2B %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca1.2B_mat = as.matrix(pca1.2B_wide[, 2:3], nrow = nrow(pca1.2B_wide), ncol = 2)
+rownames(pca1.2B_mat) = pca1.2B_wide$Outcome
+
+pca1.2Bres = princomp(pca1.2B_mat, cor = TRUE, scores = TRUE)
+summary(pca1.2Bres) # Component 1 should suffice
+
+fviz_eig(pca1.2Bres, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+
+# Look at component 1
+
+```
+```{r}
+
+fviz_contrib(pca1.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca1.2Bres, axes = 2, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+```
