@@ -458,3 +458,5 @@ for (i in 1:12) {
   d = hist(input, xlab = "", main = paste0(varB[i]))
   histB[[i]] = d
 }
+
+cite(emmeans)
