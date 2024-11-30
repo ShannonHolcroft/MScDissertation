@@ -735,14 +735,9 @@ Create a contrast matrix for the predetermined pairwise comparisons.
 
 ```{r}
 
-# Levels of the factors
+# Extract combinations of the levels
 
-levels_treatment =  levels(groupA$Treatment)
-levels_time = levels(groupA$Time)
-
-# Create all combinations of the levels
-
-combinations = expand.grid(Time = levels_time, Treatment = levels_treatment)
+combinations = data.frame(emmeans(AM_C1.1, ~ Treatment * Time))
 combination_names = paste(combinations$Treatment, combinations$Time, sep = "_")
 
 # Define the list of contrasts
@@ -751,48 +746,27 @@ contrast_list = list(
   
   # Comparisons within Control
   
-  "Control_T2_vs_T1" = setNames(c(1, -1, 0, 0, 0, 0), combination_names),
-  "Control_T2_vs_T3" = setNames(c(1, 0, -1, 0, 0, 0), combination_names),
-  "Control_T1_vs_T3" = setNames(c(0, 1, -1, 0, 0, 0), combination_names),
+  "Control_T2_vs_T1" = setNames(c(1, 0, -1, 0, 0, 0), combination_names),
+  "Control_T2_vs_T3" = setNames(c(1, 0, 0, 0, -1, 0), combination_names),
+  "Control_T1_vs_T3" = setNames(c(0, 0, 1, 0, -1, 0), combination_names),
   
   # Comparisons within MVA85A
   
-  "MVA85A_T2_vs_T1" = setNames(c(0, 0, 0, 1, -1, 0), combination_names),
-  "MVA85A_T2_vs_T3" = setNames(c(0, 0, 0, 1, 0, -1), combination_names),
-  "MVA85A_T1_vs_T3" = setNames(c(0, 0, 0, 0, 1, -1), combination_names),
+  "MVA85A_T2_vs_T1" = setNames(c(0, 1, 0, -1, 0, 0), combination_names),
+  "MVA85A_T2_vs_T3" = setNames(c(0, 1, 0, 0, 0, -1), combination_names),
+  "MVA85A_T1_vs_T3" = setNames(c(0, 0, 0, 1, 0, -1), combination_names),
   
   # Comparisons between Control and MVA85A
   
-  "T2_Control_vs_MVA85A" = setNames(c(1, 0, 0, -1, 0, 0), combination_names),
-  "T1_Control_vs_MVA85A" = setNames(c(0, 1, 0, 0, -1, 0), combination_names),
-  "T3_Control_vs_MVA85A" = setNames(c(0, 0, 1, 0, 0, -1), combination_names)
+  "T2_Control_vs_MVA85A" = setNames(c(1, -1, 0, 0, 0, 0), combination_names),
+  "T1_Control_vs_MVA85A" = setNames(c(0, 0, 1, -1, 0, 0), combination_names),
+  "T3_Control_vs_MVA85A" = setNames(c(0, 0, 0, 0, 1, -1), combination_names)
 )
 
 contrast_list
 ```
 
-Estimate the contrasts and apply corrections for Cluster 1
-```{r}
-
-emmC1.1 = emmeans(AM_C1.1, ~ Treatment * Time)
-emmC1.2 = emmeans(AM_C1.2, ~ Treatment * Time)
-
-# Apply custom contrasts
-contrastsC1.1 = data.frame(contrast(emmC1.1, method = contrast_list, adjust = "none"))
-contrastsC1.2 = data.frame(contrast(emmC1.2, method = contrast_list, adjust = "none"))
-
-contrastsC1.1$Outcome = v1.1
-contrastsC1.2$Outcome = v1.2
-
-clusterC1res = rbind(contrastsC1.1, contrastsC1.2)
-clusterC1res = clusterC1res %>% arrange(p.value)
-
-clusterC1res$BH = p.adjust(clusterC1res$p.value, method = "BH", n = length(clusterC1res$p.value))
-clusterC1res$BY = p.adjust(clusterC1res$p.value, method = "BY", n = length(clusterC1res$p.value))
-
-```
-
-Estimate and apply corrections for Cluster 2
+Estimate and apply corrections for Cluster 1. Only significant differences within group over time.
 ```{r}
 
 emmC1.1 = emmeans(AM_C1.1, ~ Treatment * Time)
@@ -818,6 +792,59 @@ clusterC1res %>% filter(BH < 0.06) %>% filter(Outcome == v1.1)
 clusterC1res %>% filter(BH < 0.06) %>% filter(Outcome == v1.2)
 
 ```
+
+Estimate and apply corrections for Cluster 2
+```{r}
+
+emmC2.1 = emmeans(AM_C2.1, ~ Treatment * Time)
+emmC2.2 = emmeans(AM_C2.2, ~ Treatment * Time)
+
+# Apply custom contrasts
+contrastsC2.1 = data.frame(contrast(emmC2.1, method = contrast_list, adjust = "none"))
+contrastsC2.2 = data.frame(contrast(emmC2.2, method = contrast_list, adjust = "none"))
+
+contrastsC2.1$Outcome = v2.1
+contrastsC2.2$Outcome = v2.2
+
+clusterC2res = rbind(contrastsC2.1, contrastsC2.2)
+clusterC2res = clusterC2res %>% arrange(p.value)
+
+clusterC2res$BH = p.adjust(clusterC2res$p.value, method = "BH", n = length(clusterC2res$p.value))
+clusterC2res$BY = p.adjust(clusterC2res$p.value, method = "BY", n = length(clusterC2res$p.value))
+
+clusterC2res$expestimate = exp(clusterC2res$estimate)
+
+clusterC2res %>% filter(BH < 0.06) %>% filter(Outcome == v2.1)
+
+clusterC2res %>% filter(BH < 0.06) %>% filter(Outcome == v2.2)
+
+```
+
+Estimate and apply corrections for Cluster 3
+
+```{r}
+
+emmC3.1 = emmeans(AM_C3.1, ~ Treatment * Time)
+
+summary(AM_C3.1)
+
+# Apply custom contrasts
+contrastsC3.1 = data.frame(contrast(emmC3.1, method = contrast_list, adjust = "none"))
+
+contrastsC3.1$Outcome = v3.1
+
+clusterC3res = contrastsC3.1 %>% arrange(p.value)
+
+clusterC3res$BH = p.adjust(clusterC3res$p.value, method = "BH", n = length(clusterC3res$p.value))
+clusterC3res$BY = p.adjust(clusterC3res$p.value, method = "BY", n = length(clusterC3res$p.value))
+
+clusterC3res$expestimate = exp(clusterC3res$estimate)
+
+clusterC3res %>% filter(BH < 0.06) %>% filter(Outcome == v3.1)
+
+contrast(emmC3.1, method = "pairwise", adjust = "none")
+```
+
 
 
 ```{r}
