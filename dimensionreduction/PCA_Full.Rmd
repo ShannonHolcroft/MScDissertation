@@ -627,7 +627,7 @@ contrast_list = list(
 contrast_list
 ```
 
-Estimate and apply corrections for MVA85A priming. Only significant differences within group over time.
+Estimate and apply corrections for QFT. Only significant differences within group over time.
 ```{r}
 
 emm2.1 = emmeans(AM_2.1, ~ QFT * Time)
@@ -700,3 +700,231 @@ qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.10)
 qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.11)
 
 ```
+
+```{r}
+# FA
+
+AM_3.1 = glmmTMB(O17 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_3.1 = summary(AM_3.1)
+
+AM_3.2 = glmmTMB(O21 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_3.2 = summary(AM_3.2)
+
+AM_3.3 = glmmTMB(O18 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_3.3 = summary(AM_3.3)
+
+AM_3.4 = glmmTMB(O39 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_3.4 = summary(AM_3.4)
+
+AM_3.5 = glmmTMB(O25 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_3.5 = summary(AM_3.5)
+
+AM_3.6 = glmmTMB(94-O15 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_3.6 = summary(AM_3.6)
+
+AM_3.7 = glmmTMB(101 - O19 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_3.7 = summary(AM_3.7)
+
+AM_3.8 = glmmTMB(101 - O36 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_3.8 = summary(AM_3.8)
+
+AM_3.9 = glmmTMB(O9 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_3.9 = summary(AM_3.9)
+
+AM_3.10 = glmmTMB(O13 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_3.10 = summary(AM_3.10)
+
+AM_3.11 = glmmTMB(O16 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_3.11 = summary(AM_3.11)
+
+AM_3.12 = glmmTMB(O20 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_3.12 = summary(AM_3.12)
+
+AM_3.13 = glmmTMB(O23 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_3.13 = summary(AM_3.13)
+
+AM_3.14 = glmmTMB(O31 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_3.14 = summary(AM_3.14)
+
+AM_3.15 = glmmTMB(O27 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_3.15 = summary(AM_3.15)
+
+n3 = length(fa_pca_set)
+
+v3.1 = varA[17]
+v3.2 = varA[21]
+v3.3 = varA[18]
+v3.4 = varA[39]
+v3.5 = varA[25]
+v3.6 = varA[15]
+v3.7 = varA[19]
+v3.8 = varA[36]
+v3.9 = varA[9]
+v3.10 = varA[13]
+v3.11 = varA[16]
+v3.12 = varA[20]
+v3.13 = varA[23]
+v3.14 = varA[31]
+v3.15 = varA[27]
+
+```
+
+Create a contrast matrix for the predetermined pairwise comparisons in Group A.
+
+```{r}
+
+# Extract combinations of the levels
+
+combinations = data.frame(emmeans(AM_3.1, ~ FA * Time))
+combination_names = paste(combinations$FA, combinations$Time, sep = "_")
+
+# Define the list of contrasts
+
+length(combination_names)
+
+contrast_list = list(
+  
+  # Comparisons within FA0
+  
+  "FA0_T2_vs_T1" = setNames(c(1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0), combination_names),
+  "FA0_T2_vs_T3" = setNames(c(1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0), combination_names),
+  "FA0_T1_vs_T3" = setNames(c(0, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0), combination_names),
+  
+  # Comparisons within FA1
+  
+  "FA1_T2_vs_T1" = setNames(c(0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0), combination_names),
+  "FA1_T2_vs_T3" = setNames(c(0, 1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0), combination_names),
+  "FA1_T1_vs_T3" = setNames(c(0, 0, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0), combination_names),
+  
+  # Comparisons within FA2
+  
+  "FA2_T2_vs_T1" = setNames(c(0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0), combination_names),
+  "FA2_T2_vs_T3" = setNames(c(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, -1, 0), combination_names),
+  "FA2_T1_vs_T3" = setNames(c(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, -1, 0), combination_names),
+  
+  # Comparisons within FA3
+  
+  "FA3_T2_vs_T1" = setNames(c(0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 0), combination_names),
+  "FA3_T2_vs_T3" = setNames(c(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, -1), combination_names),
+  "FA3_T1_vs_T3" = setNames(c(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, -1), combination_names),
+  
+  
+  # Comparisons between FA0 and FA3
+  
+  "T2_FA0_vs_FA3" = setNames(c(1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0), combination_names),
+  "T1_FA0_vs_FA3" = setNames(c(0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0), combination_names),
+  "T3_FA0_VS_FA3" = setNames(c(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, -1), combination_names),
+  
+  # Comparisons between FA0 and FA1
+  
+  "T2_FA0_vs_FA1" = setNames(c(1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), combination_names),
+  "T1_FA0_vs_FA1" = setNames(c(0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0), combination_names),
+  "T3_FA0_VS_FA1" = setNames(c(0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0), combination_names),
+  
+  
+  # Comparisons between FA2 and FA3
+  
+  "T2_FA2_vs_FA3" = setNames(c(0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0), combination_names),
+  "T1_FA2_vs_FA3" = setNames(c(0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0), combination_names),
+  "T3_FA2_VS_FA3" = setNames(c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1), combination_names)
+  
+  
+)
+
+contrast_list
+```
+
+Estimate and apply corrections for FA. Only significant differences within group over time.
+```{r}
+
+emm3.1 = emmeans(AM_3.1, ~ FA * Time)
+emm3.2 = emmeans(AM_3.2, ~ FA * Time)
+emm3.3 = emmeans(AM_3.3, ~ FA * Time)
+emm3.4 = emmeans(AM_3.4, ~ FA * Time)
+emm3.5 = emmeans(AM_3.5, ~ FA * Time)
+emm3.6 = emmeans(AM_3.6, ~ FA * Time)
+emm3.7 = emmeans(AM_3.7, ~ FA * Time)
+emm3.8 = emmeans(AM_3.8, ~ FA * Time)
+emm3.9 = emmeans(AM_3.9, ~ FA * Time)
+emm3.10 = emmeans(AM_3.10, ~ FA * Time)
+emm3.11 = emmeans(AM_3.11, ~ FA * Time)
+emm3.12 = emmeans(AM_3.12, ~ FA * Time)
+emm3.13 = emmeans(AM_3.13, ~ FA * Time)
+emm3.14 = emmeans(AM_3.14, ~ FA * Time)
+emm3.15 = emmeans(AM_3.15, ~ FA * Time)
+
+# Apply custom contrasts
+contrasts1.1 = data.frame(contrast(emm3.1, method = contrast_list, adjust = "none"))
+contrasts1.2 = data.frame(contrast(emm3.2, method = contrast_list, adjust = "none"))
+contrasts1.3 = data.frame(contrast(emm3.3, method = contrast_list, adjust = "none"))
+contrasts1.4 = data.frame(contrast(emm3.4, method = contrast_list, adjust = "none"))
+contrasts1.5 = data.frame(contrast(emm3.5, method = contrast_list, adjust = "none"))
+contrasts1.6 = data.frame(contrast(emm3.6, method = contrast_list, adjust = "none"))
+contrasts1.7 = data.frame(contrast(emm3.7, method = contrast_list, adjust = "none"))
+contrasts1.8 = data.frame(contrast(emm3.8, method = contrast_list, adjust = "none"))
+contrasts1.9 = data.frame(contrast(emm3.9, method = contrast_list, adjust = "none"))
+contrasts1.10 = data.frame(contrast(emm3.10, method = contrast_list, adjust = "none"))
+contrasts1.11 = data.frame(contrast(emm3.11, method = contrast_list, adjust = "none"))
+contrasts1.12 = data.frame(contrast(emm3.12, method = contrast_list, adjust = "none"))
+contrasts1.13 = data.frame(contrast(emm3.13, method = contrast_list, adjust = "none"))
+contrasts1.14 = data.frame(contrast(emm3.14, method = contrast_list, adjust = "none"))
+contrasts1.15 = data.frame(contrast(emm3.15, method = contrast_list, adjust = "none"))
+
+contrasts1.1$Outcome = v3.1
+contrasts1.2$Outcome = v3.2
+contrasts1.3$Outcome = v3.3
+contrasts1.4$Outcome = v3.4
+contrasts1.5$Outcome = v3.5
+contrasts1.6$Outcome = v3.6
+contrasts1.7$Outcome = v3.7
+contrasts1.8$Outcome = v3.8
+contrasts1.9$Outcome = v3.9
+contrasts1.10$Outcome = v3.10
+contrasts1.11$Outcome = v3.11
+contrasts1.12$Outcome = v3.12
+contrasts1.13$Outcome = v3.13
+contrasts1.14$Outcome = v3.14
+contrasts1.15$Outcome = v3.15
+
+fapcares = rbind(contrasts1.1, contrasts1.2, contrasts1.3, contrasts1.4,
+                  contrasts1.5, contrasts1.6, contrasts1.7, contrasts1.8, contrasts1.9,
+                  contrasts1.10, contrasts1.11, contrasts1.12, contrasts1.13, contrasts1.14, contrasts1.15)
+fapcares = fapcares %>% arrange(p.value)
+
+fapcares$BH = p.adjust(fapcares$p.value, method = "BH", n = length(fapcares$p.value))
+fapcares$BY = p.adjust(fapcares$p.value, method = "BY", n = length(fapcares$p.value))
+
+fapcares$expestimate = exp(fapcares$estimate)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.1)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.2)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.3)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.4)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.5)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.6)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.7)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.8)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.9)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.10)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.11)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.12)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.13)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.14)
+
+fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.15)
+
+```
+
