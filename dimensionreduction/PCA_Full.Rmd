@@ -6,9 +6,7 @@ format: html
 
 Both time and the variables of interest are reference coded. The time effect describes the average change over time for the reference group (or if two patients were compared, holding the variable of interest constant). The variable of interest effect is then expressed as deviations from the trajectory of the reference group. 
 
-Combining the time and time-variable interactions tells you how the levels of the variable of interest differ at different time points. We're expressing temporal trajectories relative to 8 weeks after BCG and relative to the reference level. This does confound the variation from the time- and variable factors.
-
-Looking only at the time-variable interactions is likely to be more informative, because time-variable gives you the level differences in within-level changes (i.e. the level effect) from baseline to each time point, expressing these differences as deviations from the general time effect.
+Looking at time-variable interactions gives you the level differences in within-level changes (i.e. the level effect) from baseline to each time point, expressing these differences as deviations from the general time effect.
 
 ```{r}
 library(tidyverse)
@@ -29,8 +27,6 @@ Read in the data extracted from the fitted GLMMs for each group and variable of 
 # Read in combined data
 
 alldat = read.csv("combined_data.csv")[-1]
-
-unique(alldat$Coefficient)
 
 # Drop very infrequently observed immune outcomes, antibody titres and assays
 
@@ -55,18 +51,18 @@ allB = unique(datB$Outcome)
 
 # Separate by variables of interest
 
-dat1A = datA %>% filter(Group == "MVA85A") %>% filter(Coefficient %in% c("Day56", "Day365", "TreatmentMVA85A", "TreatmentMVA85A:Day56", "TreatmentMVA85A:Day365"))
-dat1B = datB %>% filter(Group == "MVA85A") %>% filter(Coefficient %in% c("Day56", "Day365","TreatmentMVA85A", "TreatmentMVA85A:Day56", "TreatmentMVA85A:Day365"))
+dat1A = datA %>% filter(Group == "MVA85A") %>% filter(Coefficient %in% c("TreatmentMVA85A", "TreatmentMVA85A:Time56", "TreatmentMVA85A:Time365"))
+dat1B = datB %>% filter(Group == "MVA85A") %>% filter(Coefficient %in% c("TreatmentMVA85A", "TreatmentMVA85A:Time56", "TreatmentMVA85A:Time365"))
 
-dat2A = datA %>% filter(Group == "QFT") %>% filter(Coefficient %in% c("Day56", "Day365","QFTPositive", "QFTPositive:Day56", "QFTPositive:Day365"))
-dat2B = datB %>% filter(Group == "QFT") %>% filter(Coefficient %in% c("Day56", "Day365","QFTPositive", "QFTPositive:Day56", "QFTPositive:Day365"))
+dat2A = datA %>% filter(Group == "QFT") %>% filter(Coefficient %in% c("QFTPositive", "QFTPositive:Time56", "QFTPositive:Time365"))
+dat2B = datB %>% filter(Group == "QFT") %>% filter(Coefficient %in% c("QFTPositive", "QFTPositive:Time56", "QFTPositive:Time365"))
 
 dat3A = datA %>% filter(Group %in% c("FA - FA", "FA - BA"))
 
 # Retain specific comparisons of interest: FA0 in FA-BA, FA1 in FA-FA, FA2 in FA-FA, FA3 in FA-BA
 
-dat3.1.1A = dat3A %>% filter(Group == "FA - FA") %>% filter(Coefficient %in% c("Day56", "Day365", "Day63", "FA1", "FA3", "FA1:Day56", "FA1:Day365", "FA3:Day56", "FA3:Day365", "FA1:Day63", "FA3:Day63"))
-dat3.1.2A = dat3A %>% filter(Group == "FA - BA") %>% filter(Coefficient %in% c("Day56", "Day365", "Day63","FA0", "FA2", "FA0:Day56", "FA2:Day56", "FA2:Day365",  "FA0:Day365", "FA0:Day63","FA2:Day63"))
+dat3.1.1A = dat3A %>% filter(Group == "FA - FA") %>% filter(Coefficient %in% c("FA1", "FA3", "FA1:Time56", "FA1:Time365", "FA3:Time56", "FA3:Time365", "FA1:Time63", "FA3:Time63"))
+dat3.1.2A = dat3A %>% filter(Group == "FA - BA") %>% filter(Coefficient %in% c("FA0", "FA2", "FA0:Time56", "FA2:Time56", "FA2:Time365",  "FA0:Time365", "FA0:Time63","FA2:Time63"))
       
 dat3A = rbind(dat3.1.1A, dat3.1.2A)
 
@@ -74,14 +70,13 @@ dat3B = datB %>% filter(Group %in% c("FA - FA", "FA - BA"))
 
 # Retain specific comparisons of interest: FA0 in FA-BA, FA1 in FA-FA, FA2 in FA-FA, FA3 in FA-BA
 
-dat3.1.1B = dat3B %>% filter(Group == "FA - FA") %>% filter(Coefficient %in% c("Day56", "Day365", "Day63","FA1", "FA3", "FA1:Day56", "FA1:Day365", "FA3:Day56", "FA3:Day365", "FA1:Day63", "FA3:Day63"))
-dat3.1.2B = dat3B %>% filter(Group == "FA - BA") %>% filter(Coefficient %in% c("Day56", "Day365", "Day63","FA0", "FA2", "FA0:Day56", "FA2:Day56", "FA2:Day365",  "FA0:Day365", "FA0:Day63","FA2:Day63"))
+dat3.1.1B = dat3B %>% filter(Group == "FA - FA") %>% filter(Coefficient %in% c("FA1", "FA3", "FA1:Time56", "FA1:Time365", "FA3:Time56", "FA3:Time365", "FA1:Time63", "FA3:Time63"))
+dat3.1.2B = dat3B %>% filter(Group == "FA - BA") %>% filter(Coefficient %in% c("FA0", "FA2", "FA0:Time56", "FA2:Time56", "FA2:Time365",  "FA0:Time365", "FA0:Time63","FA2:Time63"))
       
 dat3B = rbind(dat3.1.1B, dat3.1.2B)
 
-dat4A = datA %>% filter(Coefficient %in% c("GenderM", "Day56:GenderM", "Day365:GenderM", "Day56", "Day365", "Day63"))
-dat4B = datB %>% filter(Coefficient %in% c("GenderM", "Day56:GenderM", "Day365:GenderM", "Day56", "Day365", "Day63"))
-
+dat4A = datA %>% filter(Coefficient %in% c("GenderM", "Time56:GenderM", "Time365:GenderM"))
+dat4B = datB %>% filter(Coefficient %in% c("GenderM", "Time56:GenderM", "Time365:GenderM"))
 ```
 
 Create data frames for PCA
@@ -102,8 +97,6 @@ tmelt_4B = melt(dat4B) %>% filter(variable == "EstOverSE")
 ```
 
 ## Make some heat maps to visualize what we're putting into the PCA
-
-The time effects far outweigh the other effects. Scaling is going to be very important.
 
 ```{r}
 
@@ -168,7 +161,7 @@ ggplot(tmelt_4B, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)
 
 ## MVA85A
 
-Apply PCA to standardised regression coefficients for MVA85A and interactions between MVA85A and time points. In Group A, the first two PCs explains ~84% of the variance in the standardised regression coefficients. Interpreting this PC is sufficient.
+Apply PCA to standardised regression coefficients for MVA85A and interactions between MVA85A and time points. In Group A, the first PCs explains sufficient variance in the standardised regression coefficients. 
 
 ```{r}
 
@@ -189,33 +182,47 @@ str(pca1.2A_mat)
 pca1.2Ares = princomp(pca1.2A_mat, cor = TRUE, scores = TRUE)
 summary(pca1.2Ares) # Component 1 should suffice
 
-fviz_eig(pca1.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+fviz_eig(pca1.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
 
 
 ```
 
-PC1 primarily describes Day 56 with Day 112 as the reference point and MVA85A priming at Day 112. PC2 primary describes Day 365.  
-
+PC1 primarily describes Day 56 with Day 112 as the reference point and MVA85A priming at Day 365. 
 ```{r}
-fviz_contrib(pca1.2Ares, axes = 1, choice = "var")
-fviz_contrib(pca1.2Ares, axes = 2, choice = "var")
+fviz_contrib(pca1.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
 ```
 
-11 immune outcomes score more highly than the uniform expectation on PC1. 
+9 immune outcomes score more highly than the uniform expectation on PC1. 
 ```{r}
-fviz_contrib(pca1.2Ares, axes = 1, choice = "ind") + ylim(0, 30) + theme_minimal() + theme(axis.text.x = element_text(angle = 90), axis.title.x = element_blank(), title = element_blank())
-
-fviz_contrib(pca1.2Ares, axes = 2, choice = "ind") + ylim(0, 30) + theme_minimal() + theme(axis.text.x = element_text(angle = 90), axis.title.x = element_blank(), title = element_blank())
-
+fviz_contrib(pca1.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
 ```
 
-The names of these 11 immune outcomes are printed below. Looking only at time-variable, there were 9 immune outcomes.
+They are selected to a subset.
+
 ```{r}
 contrib1.2A.1 = fviz_contrib(pca1.2Ares, axes = 1, choice = "ind")
-contrib1.2A.2 = fviz_contrib(pca1.2Ares, axes = 2, choice = "ind")
 
 pc1dat = contrib1.2A.1$data[which(contrib1.2A.1$data$contrib >= 3), ]
-pc2dat = contrib1.2A.2$data[which(contrib1.2A.2$data$contrib >= 3), ]
 
 pcnames1 = as.character(unique(c(pc1dat$name)))
 
@@ -225,7 +232,7 @@ mva_pca_set = pcnames1
 
 ## QFT
 
-Apply PCA to standardised regression coefficients for QFT+ and interactions between QFT+ and time points. In Group A, two PCs explain ~82% of the variance in the standardised regression coefficients.
+Apply PCA to standardised regression coefficients for QFT+ and interactions between QFT+ and time points. In Group A, 1 PC is sufficient.
 
 ```{r}
 
@@ -246,340 +253,450 @@ str(pca2.2A_mat)
 pca2.2Ares = princomp(pca2.2A_mat, cor = TRUE, scores = TRUE)
 summary(pca2.2Ares) # Component 1 should suffice
 
-fviz_eig(pca2.2Ares, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
+fviz_eig(pca2.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
 
 ```
 
-PC1 primarily describes Day 56. PC2 primarily describes Day 365. QFT 8 weeks after BCG contributes - but barely.
+PC1 primarily describes QFT 8 weeks after BCG.
 
 ```{r}
 
-fviz_contrib(pca2.2Ares, axes = 1, choice = "var")
-fviz_contrib(pca2.2Ares, axes = 2, choice = "var")
+fviz_contrib(pca2.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
 
 ```
+There are 11 contributing immune outcomes.
 
 ```{r}
-par(mfrow = c(1, 2))
-fviz_contrib(pca2.2Ares, axes = 1, choice = "ind")
-fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
+fviz_contrib(pca2.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 15) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
 
 ```
 
-There are 18 unique immune outcomes contributing to the PCs. Most of them are also in MVA85A subset.
 ```{r}
 contrib2.2A.1 = fviz_contrib(pca2.2Ares, axes = 1, choice = "ind")
-contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
 
-pc1dat = contrib2.2A.1$data[which(contrib2.2A.1$data$contrib >= 3.5), ]
-pc2dat = contrib2.2A.2$data[which(contrib2.2A.2$data$contrib >= 3.5), ]
+pc1dat = contrib2.2A.1$data[which(contrib2.2A.1$data$contrib >= 3), ]
 
-pcnames2 = as.character(unique(c(pc1dat$name, pc2dat$name)))
+pcnames1 = as.character(unique(c(pc1dat$name)))
 #pcnames2 = as.character(unique(c(pc1dat$name)))
 
-qft_pca_set = pcnames2
-
-pcnames2[pcnames2 %in% pcnames1] # 3 in QFT not also identified for MVA85A
-pcnames1 %in% pcnames2 # Many identified for MVA85A but not QFT
+qft_pca_set = pcnames1
 
 ```
 
-## Hierarchical clustering
-
-# Get distance matrices
-```{r}
-
-dist1.2A = get_dist(pca1.2A_mat, "pearson")
-```
-
-
-# Run agglomerative hierarchical cluster with complete linkage
+Perform PCA on FA coefficients. Two PCs should be analysed.
 
 ```{r}
-dendro_data_k <- function(hc, k) {
-  
-  hcdata    <-  ggdendro::dendro_data(hc, type = "rectangle")
-  seg       <-  hcdata$segments
-  labclust  <-  cutree(hc, k)[hc$order]
-  segclust  <-  rep(0L, nrow(seg))
-  heights   <-  sort(hc$height, decreasing = TRUE)
-  height    <-  mean(c(heights[k], heights[k - 1L]), na.rm = TRUE)
-  
-  for (i in 1:k) {
-    xi      <-  hcdata$labels$x[labclust == i]
-    idx1    <-  seg$x    >= min(xi) & seg$x    <= max(xi)
-    idx2    <-  seg$xend >= min(xi) & seg$xend <= max(xi)
-    idx3    <-  seg$yend < height
-    idx     <-  idx1 & idx2 & idx3
-    segclust[idx] <- i
-  }
-  
-  idx                    <-  which(segclust == 0L)
-  segclust[idx]          <-  segclust[idx + 1L]
-  hcdata$segments$clust  <-  segclust
-  hcdata$segments$line   <-  as.integer(segclust < 1L)
-  hcdata$labels$clust    <-  labclust
-  
-  hcdata
-}
+mat3.2A = tmelt_3A[, c("Outcome", "Coefficient", "value")]
 
+# Restructure the data frame
 
+pca3.2A = mat3.2A %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
 
-set_labels_params <- function(nbLabels,
-                              direction = c("tb", "bt", "lr", "rl"),
-                              fan       = FALSE) {
-  if (fan) {
-    angle       <-  360 / nbLabels * 1:nbLabels + 90
-    idx         <-  angle >= 90 & angle <= 270
-    angle[idx]  <-  angle[idx] + 180
-    hjust       <-  rep(0, nbLabels)
-    hjust[idx]  <-  1
-  } else {
-    angle       <-  rep(0, nbLabels)
-    hjust       <-  0
-    if (direction %in% c("tb", "bt")) { angle <- angle + 45 }
-    if (direction %in% c("tb", "rl")) { hjust <- 1 }
-  }
-  list(angle = angle, hjust = hjust, vjust = 0.5)
-}
+pca3.2A_wide = pca3.2A %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
 
-plot_ggdendro <- function(hcdata,
-                          direction   = c("lr", "rl", "tb", "bt"),
-                          fan         = FALSE,
-                          scale.color = NULL,
-                          branch.size = 1,
-                          label.size  = 3,
-                          nudge.label = 0.01,
-                          expand.y    = 0.1) {
-  
-  direction <- match.arg(direction) # if fan = FALSE
-  ybreaks   <- pretty(segment(hcdata)$y, n = 5)
-  ymax      <- max(segment(hcdata)$y)
-  
-  ## branches
-  p <- ggplot() +
-    geom_segment(data         =  segment(hcdata),
-                 aes(x        =  x,
-                     y        =  y,
-                     xend     =  xend,
-                     yend     =  yend,
-                     linetype =  factor(line),
-                     colour   =  factor(clust)),
-                 lineend      =  "round",
-                 show.legend  =  FALSE,
-                 size         =  branch.size)
-  
-  ## orientation
-  if (fan) {
-    p <- p +
-      coord_polar(direction = -1) +
-      scale_x_continuous(breaks = NULL,
-                         limits = c(0, nrow(label(hcdata)))) +
-      scale_y_reverse(breaks = ybreaks)
-  } else {
-    p <- p + scale_x_continuous(breaks = NULL)
-    if (direction %in% c("rl", "lr")) {
-      p <- p + coord_flip()
-    }
-    if (direction %in% c("bt", "lr")) {
-      p <- p + scale_y_reverse(breaks = ybreaks)
-    } else {
-      p <- p + scale_y_continuous(breaks = ybreaks)
-      nudge.label <- -(nudge.label)
-    }
-  }
-  
-  # labels
-  labelParams <- set_labels_params(nrow(hcdata$labels), direction, fan)
-  hcdata$labels$angle <- labelParams$angle
-  
-  p <- p +
-    geom_text(data        =  label(hcdata),
-              aes(x       =  x,
-                  y       =  y,
-                  label   =  label,
-                  colour  =  factor(clust),
-                  angle   =  angle),
-              vjust       =  labelParams$vjust,
-              hjust       =  labelParams$hjust,
-              nudge_y     =  ymax * nudge.label,
-              size        =  label.size,
-              show.legend =  FALSE)
-  
-  # colors and limits
-  if (!is.null(scale.color)) {
-    p <- p + scale_color_manual(values = scale.color)
-  }
-  
-  ylim <- -round(ymax * expand.y, 1)
-  p    <- p + expand_limits(y = ylim)
-  
-  p
-}
+pca3.2A_mat = as.matrix(pca3.2A_wide[, 2:9], nrow = nrow(pca3.2A_wide), ncol = 8)
+rownames(pca3.2A_mat) = pca3.2A_wide$Outcome
 
+pca3.2Ares = princomp(pca3.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca3.2Ares) # Component 1 should suffice
+
+fviz_eig(pca3.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
 ```
 
+PC1 primarily describes FA3. PC2 primarily described FA1.
 
 ```{r}
 
-res1.2.hclust = as.hclust(agnes(dist1.2A, diss = TRUE, method = "average"))
+fviz_contrib(pca3.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca3.2Ares, axes = 2, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+
 ```
 
-There are effectively 7 groups. Find a representative.
+PC1 has 8 contributing outcomes. PC2 has 11 contributing outcomes.
+
 ```{r}
 
-hcdata1.2 = dendro_data_k(res1.2.hclust, 7)
+fviz_contrib(pca3.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 15) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
 
-p <- plot_ggdendro(hcdata1.2,
-                   direction   = "rl",
-                   expand.y    = 0.2) 
-p + ylab("Link Height") + theme(axis.title.y = element_blank())
-
-#ggdendrogram(res1.2.hclust, rotate = TRUE, theme_dendro = FALSE) + ylab("Link Height") + theme(axis.title.y = element_blank())
+fviz_contrib(pca3.2Ares, axes = 2, choice = "ind", fill = "darkgrey", color = "black", top = 15) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
 
 ```
 
+The combined set contains 15 immune outcomes.
+
+```{r}
+contrib3.2A.1 = fviz_contrib(pca3.2Ares, axes = 1, choice = "ind")
+contrib3.2A.2 = fviz_contrib(pca3.2Ares, axes = 2, choice = "ind")
+
+pc1dat = contrib3.2A.1$data[which(contrib3.2A.1$data$contrib >= 3), ]
+pc2dat = contrib3.2A.2$data[which(contrib3.2A.2$data$contrib >= 3), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name, pc2dat$name)))
+
+fa_pca_set = pcnames1
+
+```
+
+Assuming that the subsets are independent, we can perform corrections within subsets. Retrieve the fitted models by VOI.
+
+```{r}
+# MVA85A 
+
+AM_1.1 = glmmTMB(O4 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.1 = summary(AM_1.1)
+
+AM_1.2 =glmmTMB(O17 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_1.2 = summary(AM_1.2)
+
+AM_1.3 =glmmTMB(O20 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.3 = summary(AM_1.3)
+
+AM_1.4 = glmmTMB(O31 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = poisson(link = "log"))
+AS_1.4 = summary(AM_1.4)
+
+AM_1.5 = glmmTMB(O27 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.5 = summary(AM_1.5)
+
+AM_1.6 = glmmTMB(O25 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.6 = summary(AM_1.6)
+
+AM_1.7 = glmmTMB(94-O15 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.7 = summary(AM_1.7)
+
+AM_1.8 = glmmTMB(101 - O19 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_1.8 = summary(AM_1.8)
+
+AM_1.9 = glmmTMB(101 - O36 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.9 = summary(AM_1.9)
+
+n1 = length(mva_pca_set)
+v1.1 = varA[4]
+v1.2 = varA[17]
+v1.3 = varA[31]
+v1.5 = varA[27]
+v1.6 = varA[25]
+v1.7 = varA[15]
+v1.8 = varA[19]
+v1.9 = varA[36]
+
+```
+
+Create a contrast matrix for the predetermined pairwise comparisons.
 
 ```{r}
 
-clusters1.2A = cutree(res1.2.hclust, k=7)
+# Extract combinations of the levels
 
-# Group 1
+combinations = data.frame(emmeans(AM_1.1, ~ Treatment * Time))
+combination_names = paste(combinations$Treatment, combinations$Time, sep = "_")
 
-names1 = names(clusters1.2A[clusters1.2A == 1])
+# Define the list of contrasts
 
-dist1.2Amat1 = as.matrix(dist1.2A)
-dist1.2Amat1 = dist1.2Amat1[which(rownames(dist1.2Amat1) %in% names1), ]
+contrast_list = list(
+  
+  # Comparisons within Control
+  
+  "Control_T2_vs_T1" = setNames(c(1, 0, -1, 0, 0, 0), combination_names),
+  "Control_T2_vs_T3" = setNames(c(1, 0, 0, 0, -1, 0), combination_names),
+  "Control_T1_vs_T3" = setNames(c(0, 0, 1, 0, -1, 0), combination_names),
+  
+  # Comparisons within MVA85A
+  
+  "MVA85A_T2_vs_T1" = setNames(c(0, 1, 0, -1, 0, 0), combination_names),
+  "MVA85A_T2_vs_T3" = setNames(c(0, 1, 0, 0, 0, -1), combination_names),
+  "MVA85A_T1_vs_T3" = setNames(c(0, 0, 0, 1, 0, -1), combination_names),
+  
+  # Comparisons between Control and MVA85A
+  
+  "T2_Control_vs_MVA85A" = setNames(c(1, -1, 0, 0, 0, 0), combination_names),
+  "T1_Control_vs_MVA85A" = setNames(c(0, 0, 1, -1, 0, 0), combination_names),
+  "T3_Control_vs_MVA85A" = setNames(c(0, 0, 0, 0, 1, -1), combination_names)
+)
 
-euclid1.2Amat1 = as.matrix(dist(dist1.2Amat1))
-euclid1.2Adf1 = data.frame(euclid1.2Amat1)
+contrast_list
+```
 
-euclid1.2Adf1$SS = apply(euclid1.2Adf1, 1, function(x) sum(x^2))
+Estimate and apply corrections for MVA85A priming. Only significant differences within group over time.
+```{r}
 
-euclid1.2Adf1[which.min(euclid1.2Adf1$SS), ]
+emm1.1 = emmeans(AM_1.1, ~ Treatment * Time)
+emm1.2 = emmeans(AM_1.2, ~ Treatment * Time)
+emm1.3 = emmeans(AM_1.3, ~ Treatment * Time)
+emm1.4 = emmeans(AM_1.4, ~ Treatment * Time)
+emm1.5 = emmeans(AM_1.5, ~ Treatment * Time)
+emm1.6 = emmeans(AM_1.6, ~ Treatment * Time)
+emm1.7 = emmeans(AM_1.7, ~ Treatment * Time)
+emm1.8 = emmeans(AM_1.8, ~ Treatment * Time)
+emm1.9 = emmeans(AM_1.9, ~ Treatment * Time)
 
+# Apply custom contrasts
+contrasts1.1 = data.frame(contrast(emm1.1, method = contrast_list, adjust = "none"))
+contrasts1.2 = data.frame(contrast(emm1.2, method = contrast_list, adjust = "none"))
+contrasts1.3 = data.frame(contrast(emm1.3, method = contrast_list, adjust = "none"))
+contrasts1.4 = data.frame(contrast(emm1.4, method = contrast_list, adjust = "none"))
+contrasts1.5 = data.frame(contrast(emm1.5, method = contrast_list, adjust = "none"))
+contrasts1.6 = data.frame(contrast(emm1.6, method = contrast_list, adjust = "none"))
+contrasts1.7 = data.frame(contrast(emm1.7, method = contrast_list, adjust = "none"))
+contrasts1.8 = data.frame(contrast(emm1.8, method = contrast_list, adjust = "none"))
+contrasts1.9 = data.frame(contrast(emm1.9, method = contrast_list, adjust = "none"))
+
+contrasts1.1$Outcome = v1.1
+contrasts1.2$Outcome = v1.2
+contrasts1.3$Outcome = v1.3
+contrasts1.4$Outcome = v1.4
+contrasts1.5$Outcome = v1.5
+contrasts1.6$Outcome = v1.6
+contrasts1.7$Outcome = v1.7
+contrasts1.8$Outcome = v1.8
+contrasts1.9$Outcome = v1.9
+
+mvapcares = rbind(contrasts1.1, contrasts1.2, contrasts1.3, contrasts1.4,
+                  contrasts1.5, contrasts1.6, contrasts1.7, contrasts1.8, contrasts1.9)
+mvapcares = mvapcares %>% arrange(p.value)
+
+mvapcares$BH = p.adjust(mvapcares$p.value, method = "BH", n = length(mvapcares$p.value))
+mvapcares$BY = p.adjust(mvapcares$p.value, method = "BY", n = length(mvapcares$p.value))
+
+mvapcares$expestimate = exp(mvapcares$estimate)
+
+mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.1)
+
+mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.2)
+
+mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.3)
+
+mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.4)
+
+mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.5)
+
+mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.6)
+
+mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.7)
+
+mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.8)
+
+mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.9)
 
 ```
 
-# PAM Clustering
+```{r}
+# QFT
 
-# Look at the data - how many clusters are necessary?
-tstats = teststats[, 2:5]
-p1 <- fviz_nbclust(testmat, FUN = hcut, method = "wss", 
-                   k.max = 10) +
-  ggtitle("(A) Elbow method")
-p2 <- fviz_nbclust(testmat, FUN = hcut, method = "silhouette", 
-                   k.max = 10) +
-  ggtitle("(B) Silhouette method")
+qft_pca_set
 
-# Display plots side by side
-gridExtra::grid.arrange(p1, p2, nrow = 1)
+AM_2.1 = glmmTMB(O13 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.1 = summary(AM_2.1)
 
-# Based on the within SS and average silhouette width, 2 or 3 clusters
+AM_2.2 = glmmTMB(O16 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_2.2 = summary(AM_2.2)
 
-pamall5 = pam(alldist, k = 2, diss = TRUE, nstart = 100)
-pamall5$medoids
-pamall5$silinfo
+AM_2.3 = glmmTMB(O21 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_2.3 = summary(AM_2.3)
 
-# One cluster is well-defined, 2 are less well-defined
-?pam
-pamall3 = pam(alldist, k = 3, diss = TRUE, nstart = 100)
-pamall3$medoids
-pamall3$silinfo
+AM_2.4 = glmmTMB(O18 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_2.4 = summary(AM_2.4)
 
-fviz_silhouette(pamall3, label = TRUE) + ylab("Silhouette width") + theme(legend.position = "none", plot.title = element_blank(), axis.text.x = element_text(angle = 90))
+AM_2.5 = glmmTMB(O22 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.5 = summary(AM_2.5)
 
-# The well-defined cluster contains %CD4+ ANYcytok+,%CD4+ totTNF+, %CD4+ totIFNg+, %CD4+ totIL2+, %CD8+ totIL22+
-# This is the same cluster identified during hierarchical clustering - negative treatment effect. Exclude these.
+AM_2.6 = glmmTMB(O23 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.6 = summary(AM_2.6)
 
-# Based on the heat maps, %CD8+ totTNF+ as medoid 1 (dist row 5), %CD8+ totL22+ (dist row 10) as medoid 2
-pamall = pam(alldist, k = 2, diss = TRUE, medoids = c(5, 10), do.swap = FALSE)
-pamall$medoids
-pamall$silinfo
+AM_2.7 = glmmTMB(O24 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.7 = summary(AM_2.7)
 
+AM_2.8 = glmmTMB(O31 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.8 = summary(AM_2.8)
 
-# PR Comp
+AM_2.9 = glmmTMB(O25 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.9 = summary(AM_2.9)
 
-prin_comp <- prcomp(testmat)
-explained_variance_ratio <- summary(prin_comp)[["importance"]]['Proportion of Variance',]
-explained_variance_ratio <- 100 * explained_variance_ratio
-components <- prin_comp[["x"]]
-components <- data.frame(components)
-components <- cbind(components, tmelt$variable)
-components$PC3 <- -components$PC3
-components$PC2 <- -components$PC2
+AM_2.10 = glmmTMB(O30 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.10 = summary(AM_2.10)
 
-fviz_pca_biplot(prin_comp)
+AM_2.11 = glmmTMB(101 - O36 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.11 = summary(AM_2.11)
 
-?fviz_pca
-axis = list(showline=FALSE,
-            zeroline=FALSE,
-            gridcolor='#ffff',
-            ticklen=4,
-            titlefont=list(size=13))
+n2 = length(qft_pca_set)
 
-fig <- components %>%
-  plot_ly()  %>%
-  add_trace(
-    type = 'splom',
-    dimensions = list(
-      list(label=paste('PC 1 (',toString(round(explained_variance_ratio[1],1)),'%)',sep = ''), values=~PC1),
-      list(label=paste('PC 2 (',toString(round(explained_variance_ratio[2],1)),'%)',sep = ''), values=~PC2),
-      list(label=paste('PC 3 (',toString(round(explained_variance_ratio[3],1)),'%)',sep = ''), values=~PC3),
-      list(label=paste('PC 4 (',toString(round(explained_variance_ratio[4],1)),'%)',sep = ''), values=~PC4)
-    )#,
-    #color = ~iris$Species, colors = c('#636EFA','#EF553B','#00CC96')
-  ) %>%
-  style(diagonal = list(visible = FALSE)) %>%
-  layout(
-    legend=list(title=list(text='color')),
-    hovermode='closest',
-    dragmode= 'select',
-    plot_bgcolor='rgba(240,240,240, 0.95)',
-    xaxis=list(domain=NULL, showline=F, zeroline=F, gridcolor='#ffff', ticklen=4),
-    yaxis=list(domain=NULL, showline=F, zeroline=F, gridcolor='#ffff', ticklen=4),
-    xaxis2=axis,
-    xaxis3=axis,
-    xaxis4=axis,
-    yaxis2=axis,
-    yaxis3=axis,
-    yaxis4=axis
-  )
+v2.1 = varA[13]
+v2.2 = varA[16]
+v2.3 = varA[21]
+v2.4 = varA[18]
+v2.5 = varA[22]
+v2.6 = varA[23]
+v2.7 = varA[24]
+v2.8 = varA[31]
+v2.9 = varA[25]
+v2.10 = varA[30]
+v2.11 = varA[36]
 
-fig
+```
 
-# This doesn't work very well...
+Create a contrast matrix for the predetermined pairwise comparisons.
 
-# CD8 gives you one well-defined cluster, 2 is better in terms of average sil width
-pamall8 = pam(cd8dist, k = 2, diss = TRUE, nstart = 100)
-pamall8$medoids
-pamall8$silinfo
+```{r}
 
-fviz_silhouette(pamall8, label = TRUE) + ylab("Silhouette width") + theme(legend.position = "none", plot.title = element_blank(), axis.text.x = element_text(angle = 90))
+# Extract combinations of the levels
 
-# %CD8+ totIFNg+, %CD8+ ANYcytok+, Bulk CD8+/% R7-RA-, Bulk CD8+/% R7-RA+, CD8 %Ki67+ is the well-defined cluster
-# This resembles the hierarchical clustering, but %CD8+ totIL22+ ends up in another cluster.
-# All of them have pretty strong antibiotic associations and negative/low feeding associations.
-# If you're interested in Cotramoxazole, then this is a good group to proceed with.
+combinations = data.frame(emmeans(AM_2.1, ~ QFT * Time))
+combination_names = paste(combinations$QFT, combinations$Time, sep = "_")
 
-# CD4 gives you three well-defined clusters with a good average sil width
-pamall4 = pam(cd4dist, k = 3, diss = TRUE, nstart = 100)
-pamall4$medoids
-pamall4$silinfo
+# Define the list of contrasts
 
+contrast_list = list(
+  
+  # Comparisons within Negative
+  
+  "Negative_T2_vs_T1" = setNames(c(1, 0, -1, 0, 0, 0), combination_names),
+  "Negative_T2_vs_T3" = setNames(c(1, 0, 0, 0, -1, 0), combination_names),
+  "Negative_T1_vs_T3" = setNames(c(0, 0, 1, 0, -1, 0), combination_names),
+  
+  # Comparisons within Positive
+  
+  "Positive_T2_vs_T1" = setNames(c(0, 1, 0, -1, 0, 0), combination_names),
+  "Positive_T2_vs_T3" = setNames(c(0, 1, 0, 0, 0, -1), combination_names),
+  "Positive_T1_vs_T3" = setNames(c(0, 0, 0, 1, 0, -1), combination_names),
+  
+  # Comparisons between Negative and Positive
+  
+  "T2_Negative_vs_Positive" = setNames(c(1, -1, 0, 0, 0, 0), combination_names),
+  "T1_Negative_vs_Positive" = setNames(c(0, 0, 1, -1, 0, 0), combination_names),
+  "T3_Negative_vs_Positive" = setNames(c(0, 0, 0, 0, 1, -1), combination_names)
+)
 
-fviz_silhouette(pamall4, label = TRUE) + ylab("Silhouette width") + theme(legend.position = "none", plot.title = element_blank(), axis.text.x = element_text(angle = 90))
+contrast_list
+```
 
+Estimate and apply corrections for MVA85A priming. Only significant differences within group over time.
+```{r}
 
-# %CD4+ ANYcytok+, %CD4+ totTNF+, %CD4+ totIFNg+, %CD4+ totIL2+
-# Resembles hierarchical cluster but that one is without %CD4+ totTNF+
-# Negative association with treatment, positive association with QFT
-# Include these if you want to investigate QFT, but exclude if treatment is main focus
+emm2.1 = emmeans(AM_2.1, ~ QFT * Time)
+emm2.2 = emmeans(AM_2.2, ~ QFT * Time)
+emm2.3 = emmeans(AM_2.3, ~ QFT * Time)
+emm2.4 = emmeans(AM_2.4, ~ QFT * Time)
+emm2.5 = emmeans(AM_2.5, ~ QFT * Time)
+emm2.6 = emmeans(AM_2.6, ~ QFT * Time)
+emm2.7 = emmeans(AM_2.7, ~ QFT * Time)
+emm2.8 = emmeans(AM_2.8, ~ QFT * Time)
+emm2.9 = emmeans(AM_2.9, ~ QFT * Time)
+emm2.10 = emmeans(AM_2.10, ~ QFT * Time)
+emm2.11 = emmeans(AM_2.11, ~ QFT * Time)
 
-# %CD4+ totIL22+, %CD4+ totIL17+
-# Same as hierarchical cluster, negative association with antibiotic
-# Very well-defined.
+# Apply custom contrasts
+contrasts1.1 = data.frame(contrast(emm2.1, method = contrast_list, adjust = "none"))
+contrasts1.2 = data.frame(contrast(emm2.2, method = contrast_list, adjust = "none"))
+contrasts1.3 = data.frame(contrast(emm2.3, method = contrast_list, adjust = "none"))
+contrasts1.4 = data.frame(contrast(emm2.4, method = contrast_list, adjust = "none"))
+contrasts1.5 = data.frame(contrast(emm2.5, method = contrast_list, adjust = "none"))
+contrasts1.6 = data.frame(contrast(emm2.6, method = contrast_list, adjust = "none"))
+contrasts1.7 = data.frame(contrast(emm2.7, method = contrast_list, adjust = "none"))
+contrasts1.8 = data.frame(contrast(emm2.8, method = contrast_list, adjust = "none"))
+contrasts1.9 = data.frame(contrast(emm2.9, method = contrast_list, adjust = "none"))
+contrasts1.10 = data.frame(contrast(emm2.10, method = contrast_list, adjust = "none"))
+contrasts1.11 = data.frame(contrast(emm2.11, method = contrast_list, adjust = "none"))
 
-# Bulk CD4+/% R7-RA+, CD4 %Ki67+, Bulk CD4+/% R7-RA-
-# Same as hierarchical cluster, strong negative associations with feeding.
-# Less well defined
+contrasts1.1$Outcome = v2.1
+contrasts1.2$Outcome = v2.2
+contrasts1.3$Outcome = v2.3
+contrasts1.4$Outcome = v2.4
+contrasts1.5$Outcome = v2.5
+contrasts1.6$Outcome = v2.6
+contrasts1.7$Outcome = v2.7
+contrasts1.8$Outcome = v2.8
+contrasts1.9$Outcome = v2.9
+contrasts1.10$Outcome = v2.10
+contrasts1.11$Outcome = v2.11
+
+qftpcares = rbind(contrasts1.1, contrasts1.2, contrasts1.3, contrasts1.4,
+                  contrasts1.5, contrasts1.6, contrasts1.7, contrasts1.8, contrasts1.9,
+                  contrasts1.10, contrasts1.11)
+qftpcares = qftpcares %>% arrange(p.value)
+
+qftpcares$BH = p.adjust(qftpcares$p.value, method = "BH", n = length(qftpcares$p.value))
+qftpcares$BY = p.adjust(qftpcares$p.value, method = "BY", n = length(qftpcares$p.value))
+
+qftpcares$expestimate = exp(qftpcares$estimate)
+
+qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.1)
+
+qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.2)
+
+qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.3)
+
+qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.4)
+
+qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.5)
+
+qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.6)
+
+qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.7)
+
+qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.8)
+
+qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.9)
+
+qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.10)
+
+qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.11)
+
+```
