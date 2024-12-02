@@ -928,3 +928,552 @@ fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.15)
 
 ```
 
+# Group B
+
+
+Perform a PCA on MVA85A priming input data in Group B. PC1 should be retained.
+
+```{r}
+
+mat1.2B = tmelt_1B[, c("Outcome", "Coefficient", "value")]
+
+# Restructure the data frame
+
+pca1.2B = mat1.2B %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca1.2B_wide = pca1.2B %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca1.2B_mat = as.matrix(pca1.2B_wide[, 2:3], nrow = nrow(pca1.2B_wide), ncol = 2)
+rownames(pca1.2B_mat) = pca1.2B_wide$Outcome
+
+pca1.2Bres = princomp(pca1.2B_mat, cor = TRUE, scores = TRUE)
+summary(pca1.2Bres) # Component 1 should suffice
+
+fviz_eig(pca1.2Bres, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+
+PC1 explains MVA85A priming differences at the time of BCG and 1 week later.
+
+```{r}
+fviz_contrib(pca1.2Bres, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+```
+
+There are 3 immune outcomes making large contributions.
+
+```{r}
+fviz_contrib(pca1.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+```
+
+Assuming that the subsets are independent, we can perform corrections within subset. Retrieve the fitted models.
+
+```{r}
+
+BM_1.1 = glmmTMB(O9 ~ Treatment*Time + Gender*Time + (1| ID), data = groupB2, family = tweedie(link = "log"))
+BS_1.1 = summary(BM_1.1)
+
+BM_1.2 = glmmTMB(O13 ~ Treatment*Time + Gender*Time + (1| ID), data = groupB2, family = poisson(link = "log"))
+BS_1.2 = summary(BM_1.2)
+
+BM_1.3 = glmmTMB(O16 ~ Treatment*Time + Gender*Time + (Time| ID), data = groupB2, family = Gamma(link = "log"))
+BS_1.3 = summary(BM_1.3)
+
+n1B = length(mva_pca_setB)
+v1.1 = varB[9]
+v1.2 = varB[13]
+v1.3 = varB[16]
+
+```
+
+Create a contrast matrix for the predetermined pairwise comparisons.
+
+```{r}
+
+# Extract combinations of the levels
+
+combinations = data.frame(emmeans(BM_1.1, ~ Treatment * Time))
+combination_names = paste(combinations$Treatment, combinations$Time, sep = "_")
+
+# Define the list of contrasts
+
+contrast_list = list(
+  
+  # Comparisons within Control
+  
+  "Control_T2_vs_T1" = setNames(c(1, 0, -1, 0), combination_names),
+  
+  # Comparisons within MVA85A
+  
+  "MVA85A_T2_vs_T1" = setNames(c(0, 1, 0, -1), combination_names),
+  
+  # Comparisons between Control and MVA85A
+  
+  "T2_Control_vs_MVA85A" = setNames(c(1, -1, 0, 0), combination_names),
+  "T1_Control_vs_MVA85A" = setNames(c(0, 0, 1, -1), combination_names)
+)
+
+contrast_list
+```
+
+Estimate and apply corrections for MVA85A priming subset. We find no differences.
+
+```{r}
+
+emmC1.1 = emmeans(BM_1.1, ~ Treatment * Time)
+emmC1.2 = emmeans(BM_1.2, ~ Treatment * Time)
+emmC1.3 = emmeans(BM_1.3, ~ Treatment * Time)
+
+# Apply custom contrasts
+contrasts1.1 = data.frame(contrast(emmC1.1, method = contrast_list, adjust = "none"))
+contrasts1.2 = data.frame(contrast(emmC1.2, method = contrast_list, adjust = "none"))
+contrasts1.3 = data.frame(contrast(emmC1.3, method = contrast_list, adjust = "none"))
+
+contrasts1.1$Outcome = v1.1
+contrasts1.2$Outcome = v1.2
+contrasts1.3$Outcome = v1.3
+
+mvapcaresB = rbind(contrasts1.1, contrasts1.2, contrasts1.3)
+mvapcaresB = mvapcaresB %>% arrange(p.value)
+
+mvapcaresB$BH = p.adjust(mvapcaresB$p.value, method = "BH", n = length(mvapcaresB$p.value))
+mvapcaresB$BY = p.adjust(mvapcaresB$p.value, method = "BY", n = length(mvapcaresB$p.value))
+
+mvapcaresB$expestimate = exp(mvapcaresB$estimate)
+
+mvapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v1.1)
+mvapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v1.2)
+mvapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v1.3)
+
+```
+
+
+```{r}
+contrib1.2B.1 = fviz_contrib(pca1.2Bres, axes = 1, choice = "ind")
+
+pc1dat = contrib1.2B.1$data[which(contrib1.2B.1$data$contrib >= 10), ]
+
+pc1names = as.character(unique(c(pc1dat$name)))
+
+mva_pca_setB = pc1names
+
+```
+
+Perform a PCA on QFT input data for Group B. One PC is required.
+
+```{r}
+
+mat2.2B = tmelt_2B[, c("Outcome", "Coefficient", "value")]
+
+# Restructure the data frame
+
+pca2.2B = mat2.2B %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca2.2B_wide = pca2.2B %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca2.2B_mat = as.matrix(pca2.2B_wide[, 2:3], nrow = nrow(pca2.2B_wide), ncol = 2)
+rownames(pca2.2B_mat) = pca2.2B_wide$Outcome
+
+pca2.2Bres = princomp(pca2.2B_mat, cor = TRUE, scores = TRUE)
+summary(pca2.2Bres) # Component 1 should suffice
+
+fviz_eig(pca2.2Bres, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+PC1 explains QFT differences at the time of BCG and 1 week later.
+
+```{r}
+fviz_contrib(pca2.2Bres, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+
+```
+
+
+There are 7 immune outcomes making large contributions.
+
+```{r}
+
+fviz_contrib(pca2.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+```
+
+```{r}
+contrib2.2B.1 = fviz_contrib(pca2.2Bres, axes = 1, choice = "ind")
+
+pc1dat = contrib2.2B.1$data[which(contrib2.2B.1$data$contrib >= 8), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+qft_pca_setB = pcnames1
+
+```
+
+Assuming that the subsets are independent, we can perform corrections within subset. Retrieve the fitted models.
+
+```{r}
+
+BM_2.1 = glmmTMB(O8 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = nbinom1(link = "log"))
+BS_2.1 = summary(BM_2.1)
+
+BM_2.2 = glmmTMB(O10 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = tweedie(link = "log"))
+BS_2.2 = summary(BM_2.2)
+
+BM_2.3 = glmmTMB(O11 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = poisson(link = "log"))
+BS_2.3 = summary(BM_2.3)
+
+BM_2.4 = glmmTMB(O15 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = poisson(link = "log"))
+BS_2.4 = summary(BM_2.4)
+
+BM_2.5 = glmmTMB(O12 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = Gamma(link = "log"))
+BS_2.5 = summary(BM_2.5)
+
+BM_2.6 = glmmTMB(O16 ~ QFT*Time + Gender*Time + (Time| ID), data = groupB2, family = Gamma(link = "log"))
+BS_2.6 = summary(BM_2.6)
+
+n2B = length(qft_pca_setB)
+v2.1 = varB[8]
+v2.2 = varB[10]
+v2.3 = varB[11]
+v2.4 = varB[15]
+v2.5 = varB[12]
+v2.6 = varB[16]
+
+```
+
+Create a contrast matrix for the predetermined pairwise comparisons.
+
+```{r}
+
+# Extract combinations of the levels
+
+combinations = data.frame(emmeans(BM_2.1, ~ QFT * Time))
+combination_names = paste(combinations$QFT, combinations$Time, sep = "_")
+
+# Define the list of contrasts
+
+contrast_list = list(
+  
+  # Comparisons within Negative
+  
+  "Negative_T2_vs_T1" = setNames(c(1, 0, -1, 0), combination_names),
+  
+  # Comparisons within Positive
+  
+  "Positive_T2_vs_T1" = setNames(c(0, 1, 0, -1), combination_names),
+  
+  # Comparisons between Negative and Positive
+  
+  "T2_Negative_vs_Positive" = setNames(c(1, -1, 0, 0), combination_names),
+  "T1_Negative_vs_Positive" = setNames(c(0, 0, 1, -1), combination_names)
+)
+
+contrast_list
+```
+
+Estimate and apply corrections for QFT subset. No significant results.
+
+```{r}
+
+emm2.1 = emmeans(BM_2.1, ~ QFT * Time)
+emm2.2 = emmeans(BM_2.2, ~ QFT * Time)
+emm2.3 = emmeans(BM_2.3, ~ QFT * Time)
+emm2.4 = emmeans(BM_2.4, ~ QFT * Time)
+emm2.5 = emmeans(BM_2.5, ~ QFT * Time)
+emm2.6 = emmeans(BM_2.6, ~ QFT * Time)
+
+# Apply custom contrasts
+contrasts2.1 = data.frame(contrast(emm2.1, method = contrast_list, adjust = "none"))
+contrasts2.2 = data.frame(contrast(emm2.2, method = contrast_list, adjust = "none"))
+contrasts2.3 = data.frame(contrast(emm2.3, method = contrast_list, adjust = "none"))
+contrasts2.4 = data.frame(contrast(emm2.4, method = contrast_list, adjust = "none"))
+contrasts2.5 = data.frame(contrast(emm2.5, method = contrast_list, adjust = "none"))
+contrasts2.6 = data.frame(contrast(emm2.6, method = contrast_list, adjust = "none"))
+
+contrasts2.1$Outcome = v2.1
+contrasts2.2$Outcome = v2.2
+contrasts2.3$Outcome = v2.3
+contrasts2.4$Outcome = v2.4
+contrasts2.5$Outcome = v2.5
+contrasts2.6$Outcome = v2.6
+
+qftpcaresB = rbind(contrasts2.1, contrasts2.2, contrasts2.3, contrasts2.4, contrasts2.5, contrasts2.6)
+qftpcaresB = qftpcaresB %>% arrange(p.value)
+
+qftpcaresB$BH = p.adjust(qftpcaresB$p.value, method = "BH", n = length(qftpcaresB$p.value))
+qftpcaresB$BY = p.adjust(qftpcaresB$p.value, method = "BY", n = length(qftpcaresB$p.value))
+
+qftpcaresB$expestimate = exp(qftpcaresB$estimate)
+
+qftpcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v2.1)
+qftpcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v2.2)
+qftpcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v2.3)
+qftpcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v2.4)
+qftpcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v2.5)
+qftpcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v2.6)
+
+```
+
+Perform a PCA on FA input data. PC1 and PC2 explain sufficient input variance.
+
+```{r}
+
+mat3.2B = tmelt_3B[, c("Outcome", "Coefficient", "value")]
+
+# Restructure the data frame
+
+pca3.2B = mat3.2B %>%
+  distinct(Outcome, Coefficient, .keep_all = TRUE)
+
+pca3.2B_wide = pca3.2B %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+pca3.2B_mat = as.matrix(pca3.2B_wide[, 2:9], nrow = nrow(pca3.2B_wide), ncol = 8)
+rownames(pca3.2B_mat) = pca3.2B_wide$Outcome
+
+pca3.2Bres = princomp(pca3.2B_mat, cor = TRUE, scores = TRUE)
+summary(pca3.2Bres) # Component 1 should suffice
+
+fviz_eig(pca3.2Bres, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+PC1 isn't easy to describe but PC2 mostly describes 8 weeks after BCG - predominantly for FA1.
+
+```{r}
+
+fviz_contrib(pca3.2Bres, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca3.2Bres, axes = 2, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+
+```
+
+PC1 has large contributions from 2 immune outcomes. PC2 has large contributions from 4 immune outcomes.
+
+```{r}
+
+fviz_contrib(pca3.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca3.2Bres, axes = 2, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+```
+
+```{r}
+contrib3.2B.1 = fviz_contrib(pca3.2Bres, axes = 1, choice = "ind")
+contrib3.2B.2 = fviz_contrib(pca3.2Bres, axes = 2, choice = "ind")
+
+pc1dat = contrib3.2B.1$data[which(contrib3.2B.1$data$contrib >= 10), ]
+pc2dat = contrib3.2B.2$data[which(contrib3.2B.2$data$contrib >= 10), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name, pc2dat$name)))
+
+fa_pca_setB = pcnames1
+```
+
+Assuming that the subsets are independent, we can perform corrections within subset. Retrieve the fitted models.
+
+```{r}
+
+BM_3.1 = glmmTMB(O9 ~ FA*Time + Gender*Time + (1| ID), data = groupB2, family = tweedie(link = "log"))
+BS_3.1 = summary(BM_3.1)
+
+BM_3.2 = glmmTMB(O8 ~ FA*Time + Gender*Time + (1| ID), data = groupB2, family = nbinom1(link = "log"))
+BS_3.2 = summary(BM_3.2)
+
+BM_3.3 = glmmTMB(O15 ~ FA*Time + Gender*Time + (1| ID), data = groupB2, family = poisson(link = "log"))
+BS_3.3 = summary(BM_3.3)
+
+BM_3.4 = glmmTMB(O14 ~ FA*Time + Gender*Time + (Time| ID), data = groupB2, family = t_family(link = "log"))
+BS_3.4 = summary(BM_3.4)
+
+BM_3.5 = glmmTMB(O18 ~ FA*Time + Gender*Time + (Time| ID), data = groupB2, family = Gamma(link = "log"))
+BS_3.5 = summary(BM_3.5)
+
+BM_3.6 = glmmTMB(O19 ~ FA*Time + Gender*Time + (1| ID), data = groupB2, family = Gamma(link = "log"))
+BS_3.6 = summary(BM_3.6)
+
+n3B = length(fa_pca_setB)
+v3.1 = varB[9]
+v3.2 = varB[8]
+v3.3 = varB[15]
+v3.4 = varB[14]
+v3.5 = varB[18]
+v3.6 = varB[19]
+
+```
+
+Create a contrast matrix for the predetermined pairwise comparisons.
+
+```{r}
+
+# Extract combinations of the levels
+
+combinations = data.frame(emmeans(BM_3.1, ~ FA * Time))
+combination_names = paste(combinations$FA, combinations$Time, sep = "_")
+
+# Define the list of contrasts
+
+contrast_list = list(
+  
+  # Comparisons within FA0
+  
+  "FA0_T2_vs_T1" = setNames(c(1, 0, 0, 0, -1, 0, 0, 0), combination_names),
+  
+  # Comparisons within FA1
+  
+  "FA1_T2_vs_T1" = setNames(c(0, 1, 0, 0, 0, -1, 0, 0), combination_names),
+  
+  # Comparisons within FA2
+  
+  "FA2_T2_vs_T1" = setNames(c(0, 0, 1, 0, 0, 0, -1, 0), combination_names),
+  
+  # Comparisons within FA3
+  
+  "FA3_T2_vs_T1" = setNames(c(0, 0, 0, 1, 0, 0, 0, -1), combination_names),
+  
+  
+  # Comparisons between FA0 and FA3
+  
+  "T2_FA0_vs_FA3" = setNames(c(1, 0, 0, -1, 0, 0, 0, 0), combination_names),
+  "T1_FA0_vs_FA3" = setNames(c(0, 0, 0, 0, 1, 0, 0, -1), combination_names),
+  
+  # Comparisons between FA0 and FA1
+  
+  "T2_FA0_vs_FA1" = setNames(c(1, -1, 0, 0, 0, 0, 0, 0), combination_names),
+  "T1_FA0_vs_FA1" = setNames(c(0, 0, 0, 0, 1, -1, 0, 0), combination_names),
+  
+  
+  # Comparisons between FA2 and FA3
+  
+  "T2_FA2_vs_FA3" = setNames(c(0, 0, 1, -1, 0, 0, 0, 0), combination_names),
+  "T1_FA2_vs_FA3" = setNames(c(0, 0, 0, 0, 0, 0, 1, -1), combination_names)
+  
+  
+)
+
+contrast_list
+```
+
+Estimate and apply corrections. There are some differences.
+```{r}
+
+emm3.1 = emmeans(BM_3.1, ~ FA * Time)
+emm3.2 = emmeans(BM_3.2, ~ FA * Time)
+emm3.3 = emmeans(BM_3.3, ~ FA * Time)
+emm3.4 = emmeans(BM_3.4, ~ FA * Time)
+emm3.5 = emmeans(BM_3.5, ~ FA * Time)
+emm3.6 = emmeans(BM_3.6, ~ FA * Time)
+
+# Apply custom contrasts
+contrasts3.1 = data.frame(contrast(emm3.1, method = contrast_list, adjust = "none"))
+contrasts3.2 = data.frame(contrast(emm3.2, method = contrast_list, adjust = "none"))
+contrasts3.3 = data.frame(contrast(emm3.3, method = contrast_list, adjust = "none"))
+contrasts3.4 = data.frame(contrast(emm3.4, method = contrast_list, adjust = "none"))
+contrasts3.5 = data.frame(contrast(emm3.5, method = contrast_list, adjust = "none"))
+contrasts3.6 = data.frame(contrast(emm3.6, method = contrast_list, adjust = "none"))
+
+contrasts3.1$Outcome = v3.1
+contrasts3.2$Outcome = v3.2
+contrasts3.3$Outcome = v3.3
+contrasts3.4$Outcome = v3.4
+contrasts3.5$Outcome = v3.5
+contrasts3.6$Outcome = v3.6
+
+fapcaresB = rbind(contrasts3.1, contrasts3.2, contrasts3.3, contrasts3.4, contrasts3.5, contrasts3.6)
+fapcaresB = fapcaresB %>% arrange(p.value)
+
+fapcaresB$BH = p.adjust(fapcaresB$p.value, method = "BH", n = length(fapcaresB$p.value))
+fapcaresB$BY = p.adjust(fapcaresB$p.value, method = "BY", n = length(fapcaresB$p.value))
+
+fapcaresB$expestimate = exp(fapcaresB$estimate)
+
+fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.1)
+fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.2)
+fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.3)
+fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.4)
+fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.5)
+fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.6)
+
+
+```
