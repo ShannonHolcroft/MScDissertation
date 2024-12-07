@@ -15,8 +15,95 @@ library(factoextra)
 library(ggpubr)
 library(cluster)
 library(ggdendro)
+library(glmmTMB)
+library(readxl)
+library(emmeans)
 
 ```
+
+## Read in modelling data
+
+```{r}
+# Read in group data
+
+groupA = read_xlsx("groupAinfantsData_AD_23Feb2023.xlsx")
+varA = colnames(groupA[, 17:56])
+
+groupB = read_xlsx("groupBinfantsData_AD_23Feb2023.xlsx")
+varB = colnames(groupB[, 16:34])
+
+# Change variable names
+
+## Study design and covariates
+
+colnames(groupA)[1:4] = c("ID", "Group", "Time", "Treatment")
+groupA$Time = as.factor(groupA$Time)
+colnames(groupA)[10] = c("QFT")
+colnames(groupA)[12:13] = c("Feeding", "Antibiotic")
+
+colnames(groupB)[1:4] =  c("ID", "Group", "Time", "Treatment")
+groupB$Time = as.factor(groupB$Time)
+colnames(groupB)[10] = c("QFT")
+colnames(groupB)[12:13] = c("Feeding", "Antibiotic")
+
+# Create new dummy variables for feeding and antibiotic
+
+groupA$FA = ifelse(groupA$Feeding == "Breast Milk" & groupA$Antibiotic == "Yes", 3, ifelse(groupA$Feeding == "Breast Milk" & groupA$Antibiotic == "No", 2, ifelse(groupA$Feeding == "Formula" & groupA$Antibiotic == "No", 1, 0)))
+groupA$FA = factor(groupA$FA)
+
+groupB$FA = ifelse(groupB$Feeding == "Breast Milk" & groupB$Antibiotic == "Y", 3, ifelse(groupB$Feeding == "Breast Milk" & groupB$Antibiotic == "N", 2, ifelse(groupB$Feeding == "Formula" & groupB$Antibiotic == "N", 1, 0)))
+groupB$FA = factor(groupB$FA)
+
+## Create immune response data sets
+
+# Rename by number
+
+groupA = rename_with(.data = groupA, .fn = ~ paste0("O", 1:length(varA)), .cols = 17:56)
+groupB = rename_with(.data = groupB, .fn = ~ paste0("O", 1:length(varB)), .cols = 16:34)
+
+# Drop indeterminate QFT observations
+indet_idsA = groupA[which(groupA$QFT == "Indeterminate"), ]$ID
+indet_idsB = groupB[which(groupB$QFT == "Indeterminate"), ]$ID
+
+groupA = groupA[-which(groupA$ID %in% indet_idsA), ]
+groupB = groupB[-which(groupB$ID %in% indet_idsB), ]
+
+# Make time and variables of interest factors
+
+colnam = c("Treatment", "Time", "Gender", "QFT", "FA")
+groupA[colnam] = lapply(groupA[colnam], factor)
+groupB[colnam] = lapply(groupB[colnam], factor)
+
+# Set reference levels for Group A
+
+groupA$Time = factor(groupA$Time, levels = c("112", "56", "365"))
+
+# Divide Group B by time points and set reference levels
+
+groupB1 = groupB[, -c(16:18, 23:34)]
+groupB1 = groupB1[-which(groupB1$Time %in% c("63", "0", "56")), ]
+groupB1$Time = factor(groupB1$Time, levels = c("112", "365"))
+
+groupB2 = groupB[, -c(16:22)]
+groupB2 = groupB2[-which(groupB2$Time %in% c("112", "0", "365")), ]
+groupB2$Time = factor(groupB2$Time, levels = c("63", "56"))
+
+# Relevel for coefficient extraction
+
+groupAre1 = groupA
+groupAre1$FA = factor(groupAre1$FA, levels = c(3, 0, 1, 2))
+groupAre1[colnam] = lapply(groupAre1[colnam], factor)
+
+groupB1re1 = groupB1
+groupB1re1$FA = factor(groupB1re1$FA, levels = c(3, 0, 1, 2))
+groupB1re1[colnam] = lapply(groupB1re1[colnam], factor)
+
+groupB2re1 = groupB2
+groupB2re1$FA = factor(groupB2re1$FA, levels = c(3, 0, 1, 2))
+groupB2re1[colnam] = lapply(groupB2re1[colnam], factor)
+
+```
+
 
 ## Data Preparation
 
@@ -431,7 +518,8 @@ AS_1.9 = summary(AM_1.9)
 n1 = length(mva_pca_set)
 v1.1 = varA[4]
 v1.2 = varA[17]
-v1.3 = varA[31]
+v1.3 = varA[20]
+v1.4 = varA[31]
 v1.5 = varA[27]
 v1.6 = varA[25]
 v1.7 = varA[15]
@@ -990,6 +1078,17 @@ fviz_contrib(pca1.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "b
 
 ```
 
+```{r}
+contrib1.2B.1 = fviz_contrib(pca1.2Bres, axes = 1, choice = "ind")
+
+pc1dat = contrib1.2B.1$data[which(contrib1.2B.1$data$contrib >= 10), ]
+
+pc1names = as.character(unique(c(pc1dat$name)))
+
+mva_pca_setB = pc1names
+```
+
+
 Assuming that the subsets are independent, we can perform corrections within subset. Retrieve the fitted models.
 
 ```{r}
@@ -1068,18 +1167,6 @@ mvapcaresB$expestimate = exp(mvapcaresB$estimate)
 mvapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v1.1)
 mvapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v1.2)
 mvapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v1.3)
-
-```
-
-
-```{r}
-contrib1.2B.1 = fviz_contrib(pca1.2Bres, axes = 1, choice = "ind")
-
-pc1dat = contrib1.2B.1$data[which(contrib1.2B.1$data$contrib >= 10), ]
-
-pc1names = as.character(unique(c(pc1dat$name)))
-
-mva_pca_setB = pc1names
 
 ```
 
@@ -1474,6 +1561,74 @@ fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.3)
 fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.4)
 fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.5)
 fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.6)
+
+
+```
+
+```{r}
+
+# Group A set comparison
+
+Aset_list = list(MVA85A = mva_pca_set, QFT = qft_pca_set, FA = fa_pca_set)
+
+# Number per set
+
+length(mva_pca_set)
+length(qft_pca_set)
+length(fa_pca_set)
+
+# Number of unique immune outcomes
+unique(c(mva_pca_set, qft_pca_set, fa_pca_set))
+
+Aresult = sapply(allA, function(x) {
+  sapply(Aset_list, function(vec) as.numeric(x %in% vec))
+})
+
+Aset_res = t(Aresult)
+Amelt = melt(Aset_res)
+colnames(Amelt) = c("Outcome", "Variable", "Indicator")
+Amelt$Indicator = as.logical(Amelt$Indicator)
+
+ggplot(Amelt, aes(x = Variable, y = Outcome, fill = Indicator)) +
+  geom_tile(color = "black") + theme_bw() +
+  theme(axis.text.y = element_text(size=9, family = "TT Arial"),
+        axis.text.x = element_text(size=10, angle = 0, family = "TT Arial", face = "bold"),
+        axis.title.y = element_blank(), axis.title.x = element_blank(), legend.position = "none") +
+scale_fill_manual(name = "Selected", breaks = c("FALSE", "TRUE"), values = c("lightgrey", "darkcyan"))
+
+
+```
+
+```{r}
+
+# Group A set comparison
+
+Bset_list = list(MVA85A = mva_pca_setB, QFT = qft_pca_setB, FA = fa_pca_setB)
+
+# Number per set
+
+length(mva_pca_setB)
+length(qft_pca_setB)
+length(fa_pca_setB)
+
+# Number of unique immune outcomes
+unique(c(mva_pca_setB, qft_pca_setB, fa_pca_setB))
+
+Bresult = sapply(allB, function(x) {
+  sapply(Bset_list, function(vec) as.numeric(x %in% vec))
+})
+
+Bset_res = t(Bresult)
+Bmelt = melt(Bset_res)
+colnames(Bmelt) = c("Outcome", "Variable", "Indicator")
+Bmelt$Indicator = as.logical(Bmelt$Indicator)
+
+ggplot(Bmelt, aes(x = Variable, y = Outcome, fill = Indicator)) +
+  geom_tile(color = "black") + theme_bw() +
+  theme(axis.text.y = element_text(size=9, family = "TT Arial"),
+        axis.text.x = element_text(size=10, angle = 0, family = "TT Arial", face = "bold"),
+        axis.title.y = element_blank(), axis.title.x = element_blank(), legend.position = "none") +
+scale_fill_manual(name = "Selected", breaks = c("FALSE", "TRUE"), values = c("lightgrey", "darkcyan"))
 
 
 ```
