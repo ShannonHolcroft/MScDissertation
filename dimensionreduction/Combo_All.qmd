@@ -3237,6 +3237,7 @@ clusterC2resB %>% filter(BH < 0.06) %>% filter(Outcome == v2.2B)
 ```{r}
 
 mat4.2A = tmelt_4A[, c("Outcome", "Group", "Coefficient", "value")]
+mat4.2A$OutcomeGroup = paste(mat4.2A$Outcome, mat4.2A$Group)
 
 # Restructure the data frame
 
@@ -3247,27 +3248,27 @@ mat4.2A_fa = mat4.2A %>% filter(Group %in% c("FA - FA", "FA - BA"))
 # MVA85A data preparation
 
 mat4.2A_mva_wide = mat4.2A_mva %>%
-  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
 
 mat4.2A2_mva = as.matrix(mat4.2A_mva_wide[, 2:4], nrow = nrow(mat4.2A_mva_wide), ncol = 3)
-row.names(mat4.2A2_mva) = mat4.2A_mva_wide$Outcome
+row.names(mat4.2A2_mva) = mat4.2A_mva_wide$OutcomeGroup
 dist4.2A_mva = get_dist(mat4.2A2_mva, "pearson")
 
 # QFT data preparation
 
 mat4.2A_qft_wide = mat4.2A_qft %>%
-  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
 
 mat4.2A2_qft = as.matrix(mat4.2A_qft_wide[, 2:4], nrow = nrow(mat4.2A_qft_wide), ncol = 3)
-row.names(mat4.2A2_qft) = mat4.2A_qft_wide$Outcome
+row.names(mat4.2A2_qft) = mat4.2A_qft_wide$OutcomeGroup
 dist4.2A_qft = get_dist(mat4.2A2_qft, "pearson")
 
 # FA data preparation
 
 mat4.2A_fa_wide = mat4.2A_fa %>%
-  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
 
-mat4.2A2_fa = as.matrix(cbind(unlist(mat4.2A_fa_wide[, 2]), unlist(mat4.2A_fa_wide[, 3]), unlist(mat4.2A_fa_wide[, 4])), nrow = nrow(mat4.2A_fa_wide), ncol = 3)
+mat4.2A2_fa = as.matrix(mat4.2A_fa_wide[, 2:4], nrow = nrow(mat4.2A_fa_wide), ncol = 3)
 row.names(mat4.2A2_fa) = mat4.2A_fa_wide$OutcomeGroup
 dist4.2A_fa = get_dist(mat4.2A2_fa, "pearson")
 
@@ -3276,17 +3277,33 @@ dist4.2A_fa = get_dist(mat4.2A2_fa, "pearson")
 
 ```{r}
 
-res4.2.hclust = as.hclust(agnes(dist4.2A, diss = TRUE, method = "average"))
+res4.2.hclust_mva = as.hclust(agnes(dist4.2A_mva, diss = TRUE, method = "average"))
+res4.2.hclust_qft = as.hclust(agnes(dist4.2A_qft, diss = TRUE, method = "average"))
+res4.2.hclust_fa = as.hclust(agnes(dist4.2A_fa, diss = TRUE, method = "average"))
 ```
 
-There are effectively 7 groups. Perf+ Ki67+ CD4 is a singleton, but the others require representatives.
+There are effectively 10 groups. Perf+ Ki67+ CD4 is a singleton, but the others require representatives.
 ```{r}
 
-hcdata4.2 = dendro_data_k(res4.2.hclust, 10)
+hcdata4.2_mva = dendro_data_k(res4.2.hclust_mva, 5)
 
-p = plot_ggdendro(hcdata4.2,
+p = plot_ggdendro(hcdata4.2_mva,
                    direction   = "rl",
-                   expand.y    = 0.2) 
+                   expand.y    = 0.15) 
+p + ylab("Link Height") + geom_hline(yintercept = 0.1) + theme(axis.title.y = element_blank())
+
+hcdata4.2_qft = dendro_data_k(res4.2.hclust_qft, 7)
+
+p = plot_ggdendro(hcdata4.2_qft,
+                   direction   = "rl",
+                   expand.y    = 0.15) 
+p + ylab("Link Height") + geom_hline(yintercept = 0.1) + theme(axis.title.y = element_blank())
+
+hcdata4.2_fa = dendro_data_k(res4.2.hclust_fa, 7)
+
+p = plot_ggdendro(hcdata4.2_fa,
+                   direction   = "rl",
+                   expand.y    = 0.15) 
 p + ylab("Link Height") + geom_hline(yintercept = 0.1) + theme(axis.title.y = element_blank())
 
 ```
@@ -3296,59 +3313,58 @@ p + ylab("Link Height") + geom_hline(yintercept = 0.1) + theme(axis.title.y = el
 clusters4.2A = cutree(res4.2.hclust, k=10)
 
 # Partial matches to find
-matches = unique(datA$Group)
+#matches = unique(datA$Group)
 
 # Function to drop content after finding a partial match
-drop_after_match = function(string, matches) {
+#drop_after_match = function(string, matches) {
   # Create a pattern that matches any of the words in 'matches'
-  pattern = paste(matches, collapse = "|")
+  #pattern = paste(matches, collapse = "|")
   # Use 'sub()' to drop everything after and including the matched word
-  sub(paste0("(.*?)\\s+(", pattern, ").*"), "\\1", string)
-}
+  #sub(paste0("(.*?)\\s+(", pattern, ").*"), "\\1", string)
+#}
 
 # Apply the function to the list of strings
-pcnames5_split = unique(lapply(pcnames5, drop_after_match, matches))
+#pcnames5_split = unique(lapply(pcnames5, drop_after_match, matches))
 
-gender_pca_set = pcnames5_split
+#gender_pca_set = pcnames5_split
 
 # Group 1
 
 names1 = names(clusters4.2A[clusters4.2A == 1])
-names1split = unique(lapply(names1, drop_after_match, matches))
+#names1split = unique(lapply(names1, drop_after_match, matches))
 
 names2 = names(clusters4.2A[clusters4.2A == 2])
-names2split = unique(lapply(names2, drop_after_match, matches))
+#names2split = unique(lapply(names2, drop_after_match, matches))
 
 names3 = names(clusters4.2A[clusters4.2A == 3])
-names3split = unique(lapply(names3, drop_after_match, matches))
+#names3split = unique(lapply(names3, drop_after_match, matches))
 
 names4 = names(clusters4.2A[clusters4.2A == 4])
-names4split = unique(lapply(names4, drop_after_match, matches))
+#names4split = unique(lapply(names4, drop_after_match, matches))
 
 names5 = names(clusters4.2A[clusters4.2A == 5])
-names5split = unique(lapply(names5, drop_after_match, matches))
+#names5split = unique(lapply(names5, drop_after_match, matches))
 
 names6 = names(clusters4.2A[clusters4.2A == 6])
-names6split = unique(lapply(names6, drop_after_match, matches))
+#names6split = unique(lapply(names6, drop_after_match, matches))
 
 names7 = names(clusters4.2A[clusters4.2A == 7])
-names7split = unique(lapply(names7, drop_after_match, matches))
+#names7split = unique(lapply(names7, drop_after_match, matches))
 
 names8 = names(clusters4.2A[clusters4.2A == 8])
-names8split = unique(lapply(names8, drop_after_match, matches))
+#names8split = unique(lapply(names8, drop_after_match, matches))
 
 names9 = names(clusters4.2A[clusters4.2A == 9])
-names9split = unique(lapply(names9, drop_after_match, matches))
+#names9split = unique(lapply(names9, drop_after_match, matches))
 
 names10 = names(clusters4.2A[clusters4.2A == 10])
-names10split = unique(lapply(names10, drop_after_match, matches))
+#names10split = unique(lapply(names10, drop_after_match, matches))
 
 ```
 
 ```{r}
 
-mat4.2A = tmelt_4A[, c("Outcome", "Coefficient", "value")]
-mat4.2A = mat4.2A %>% filter(Outcome %in% names1split)
+mat4.2A_mva = mat4.2A_mva_wide %>% filter(OutcomeGroup %in% names1)
 
 # Restructure the data frame
 
