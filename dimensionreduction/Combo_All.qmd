@@ -4669,121 +4669,529 @@ p + ylab("Link Height") + geom_hline(yintercept = 0.2) + theme(axis.title.y = el
 
 ```{r}
 
-mat1.2B = tmelt_1B[, c("Outcome", "Coefficient", "value")]
+clusters4.2B_mva = cutree(res4.2.hclust_mvaB, k=2)
+clusters4.2B_qft = cutree(res4.2.hclust_qftB, k=2)
+clusters4.2B_fa = cutree(res4.2.hclust_faB, k=2)
 
-# Restructure the data frame
+names2_mva = names(clusters4.2B_mva[clusters4.2B_mva == 1])
+names1_mva = names(clusters4.2B_mva[clusters4.2B_mva == 2])
 
-mat1.2B = mat1.2B %>%
-  distinct(Outcome, Coefficient, .keep_all = TRUE)
+names2_qft = names(clusters4.2B_qft[clusters4.2B_qft == 1])
+names1_qft = names(clusters4.2B_qft[clusters4.2B_qft == 2])
 
-mat1.2B_wide = mat1.2B %>%
-  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
-
-mat1.2B = as.matrix(mat1.2B_wide[, 2:3], nrow = nrow(mat1.2B_wide), ncol = 2)
-row.names(mat1.2B) = mat1.2B_wide$Outcome
-dist1.2B = get_dist(mat1.2B, "pearson")
-
-```
-
-```{r}
-
-res1.2.hclustB = as.hclust(agnes(dist1.2B, diss = TRUE, method = "average"))
-```
-
-There are 2 groups.
-```{r}
-
-hcdata1.2B = dendro_data_k(res1.2.hclustB, 2)
-
-p = plot_ggdendroh(hcdata1.2B,
-                   direction   = "rl",
-                   expand.y    = 0.2) 
-p + ylab("\n Link Height") + geom_hline(yintercept = 0.15, linetype = "solid", size = 1) + theme_minimal() + theme(axis.title.y = element_blank())
-
+names2_fa = names(clusters4.2B_fa[clusters4.2B_fa == 1])
+names1_fa = names(clusters4.2B_fa[clusters4.2B_fa == 2])
 
 ```
 
+# MVA85A
+
+One PC is sufficient
 ```{r}
 
-clusters1.2B = cutree(res1.2.hclustB, k=2)
+mat4.2A_fa5 = mat4.2A_fa_wide %>% filter(OutcomeGroup %in% names5)
 
-# Group 1
+pca4.2A_mat = as.matrix(mat4.2A_fa5[, 2:4], nrow = nrow(mat4.2A_fa5), ncol = 3)
+rownames(pca4.2A_mat) = mat4.2A_fa5$OutcomeGroup
 
-names1 = names(clusters1.2B[clusters1.2B == 1])
-names2 = names(clusters1.2B[clusters1.2B == 2])
+pca4.2Ares = princomp(pca4.2A_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Ares) # Component 1 should suffice
 
+fviz_eig(pca4.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
 
 ```
-
-CD4+ any is the most similar to all other objects in the cluster.
-
+Select all
 ```{r}
-
-mat1.2B = tmelt_1B[, c("Outcome", "Coefficient", "value")]
-mat1.2B = mat1.2B %>% filter(Outcome %in% names1)
-
-# Restructure the data frame
-
-pca1.2B = mat1.2B %>%
-  distinct(Outcome, Coefficient, .keep_all = TRUE)
-
-pca1.2B_wide = pca1.2B %>%
-  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
-
-pca1.2B_mat = as.matrix(pca1.2B_wide[, 2:3], nrow = nrow(pca1.2B_wide), ncol = 2)
-rownames(pca1.2B_mat) = pca1.2B_wide$Outcome
-
-pca1.2Bres = princomp(pca1.2B_mat, cor = TRUE, scores = TRUE)
-summary(pca1.2Bres) # Component 1 should suffice
-
-fviz_eig(pca1.2Bres, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
-
-# Look at component 1
-
-```
-
-```{r}
-
-mat1.2B = tmelt_1B[, c("Outcome", "Coefficient", "value")]
-mat1.2B = mat1.2B %>% filter(Outcome %in% names2)
-
-# Restructure the data frame
-
-pca1.2B = mat1.2B %>%
-  distinct(Outcome, Coefficient, .keep_all = TRUE)
-
-pca1.2B_wide = pca1.2B %>%
-  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
-
-pca1.2B_mat = as.matrix(pca1.2B_wide[, 2:3], nrow = nrow(pca1.2B_wide), ncol = 2)
-rownames(pca1.2B_mat) = pca1.2B_wide$Outcome
-
-pca1.2Bres = princomp(pca1.2B_mat, cor = TRUE, scores = TRUE)
-summary(pca1.2Bres) # Component 1 should suffice
-
-fviz_eig(pca1.2Bres, xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "", ylim = c(0, 100))
-
-# Look at component 1
-
-```
-```{r}
-
-fviz_contrib(pca1.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+fviz_contrib(pca4.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 50) +
   labs(y = element_text("Contributions(%)\n")) +
   theme_minimal() +
   theme(title = element_blank(),
         axis.title.y = element_text(size = 12, face = "bold"),
         axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
         axis.text.y = element_text(size = 10))
 
-fviz_contrib(pca1.2Bres, axes = 2, choice = "ind", fill = "darkgrey", color = "black", top = 10) +
+fviz_contrib(pca4.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
   labs(y = element_text("Contributions(%)\n")) +
   theme_minimal() +
   theme(title = element_blank(),
         axis.title.y = element_text(size = 12, face = "bold"),
         axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
         axis.text.y = element_text(size = 10))
 
+
 ```
+
+```{r}
+contrib4.2A.1 = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+
+pc1dat = contrib4.2A.1$data[which(contrib4.2A.1$data$contrib >= 15), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_qft_c5 = pcnames1
+
+```
+
+# Group B
+
+## MVA85A
+```{r}
+
+mat4.2B_mva1 = mat4.2B_mva_wide %>% filter(OutcomeGroup %in% names1_mva)
+
+pca4.2B_mat = as.matrix(mat4.2B_mva1[, 2:3], nrow = nrow(mat4.2B_mva1), ncol = 2)
+rownames(pca4.2B_mat) = mat4.2B_mva1$OutcomeGroup
+
+pca4.2Bres = princomp(pca4.2B_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Bres) # Component 1 should suffice
+
+fviz_eig(pca4.2Bres, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+Select 7 immune outcomes
+
+```{r}
+
+fviz_contrib(pca4.2Bres, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 2, choice = "var", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 2, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+
+```
+
+
+
+```{r}
+contrib4.2B.1 = fviz_contrib(pca4.2Bres, axes = 1, choice = "ind")
+contrib4.2B.2 = fviz_contrib(pca4.2Bres, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2B.1$data[which(contrib4.2B.1$data$contrib >= 10), ]
+pc2dat = contrib4.2B.2$data[which(contrib4.2B.2$data$contrib >= 10), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name, pc2dat$name)))
+
+sex_mvaB_c1 = pcnames1
+
+```
+
+
+Need both PCs 
+```{r}
+
+mat4.2B_mva2 = mat4.2B_mva_wide %>% filter(OutcomeGroup %in% names2_mva)
+
+pca4.2B_mat = as.matrix(mat4.2B_mva2[, 2:3], nrow = nrow(mat4.2B_mva2), ncol = 2)
+rownames(pca4.2B_mat) = mat4.2B_mva2$OutcomeGroup
+
+pca4.2Bres = princomp(pca4.2B_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Bres) # Component 1 should suffice
+
+fviz_eig(pca4.2Bres, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+Select 2 immune outcomes and drop the third
+
+```{r}
+
+fviz_contrib(pca4.2Bres, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 2, choice = "var", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 2, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+
+```
+```{r}
+contrib4.2B.1 = fviz_contrib(pca4.2Bres, axes = 1, choice = "ind")
+contrib4.2B.2 = fviz_contrib(pca4.2Bres, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2B.1$data[which(contrib4.2B.1$data$contrib >= 20), ]
+pc2dat = contrib4.2B.2$data[which(contrib4.2B.2$data$contrib >= 20), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name, pc2dat$name)))
+
+sex_mvaB_c2 = pcnames1
+
+```
+
+```{r}
+sexclusters_mvaB = c(sex_mvaB_c1, sex_mvaB_c2)
+```
+
+# QFT
+
+Both PCs are needed
+
+```{r}
+mat4.2B_qft1 = mat4.2B_qft_wide %>% filter(OutcomeGroup %in% names1_qft)
+
+pca4.2B_mat = as.matrix(mat4.2B_qft1[, 2:3], nrow = nrow(mat4.2B_qft1), ncol = 2)
+rownames(pca4.2B_mat) = mat4.2B_qft1$OutcomeGroup
+
+pca4.2Bres = princomp(pca4.2B_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Bres) # Component 1 should suffice
+
+fviz_eig(pca4.2Bres, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+```
+
+Select five immune outcomes -  1 contributes to both PCs
+```{r}
+fviz_contrib(pca4.2Bres, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 2, choice = "var", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 2, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+
+```
+
+```{r}
+contrib4.2B.1 = fviz_contrib(pca4.2Bres, axes = 1, choice = "ind")
+contrib4.2B.2 = fviz_contrib(pca4.2Bres, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2B.1$data[which(contrib4.2B.1$data$contrib >= 10), ]
+pc2dat = contrib4.2B.2$data[which(contrib4.2B.2$data$contrib >= 10), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name, pc2dat$name)))
+
+sex_qftB_c1 = pcnames1
+
+```
+
+```{r}
+mat4.2B_qft2 = mat4.2B_qft_wide %>% filter(OutcomeGroup %in% names2_qft)
+
+pca4.2B_mat = as.matrix(mat4.2B_qft2[, 2:3], nrow = nrow(mat4.2B_qft2), ncol = 2)
+rownames(pca4.2B_mat) = mat4.2B_qft2$OutcomeGroup
+
+pca4.2Bres = princomp(pca4.2B_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Bres) # Component 1 should suffice
+
+fviz_eig(pca4.2Bres, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+```
+
+Can't downselect here
+```{r}
+fviz_contrib(pca4.2Bres, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 2, choice = "var", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 2, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+
+```
+
+```{r}
+sexclusters_qftB = c(sex_qft_c1, names2_qft)
+```
+
+# FA
+
+Only PC1 is needed
+
+```{r}
+mat4.2B_fa1 = mat4.2B_fa_wide %>% filter(OutcomeGroup %in% names1_fa)
+
+pca4.2B_mat = as.matrix(mat4.2B_fa1[, 2:3], nrow = nrow(mat4.2B_fa1), ncol = 2)
+rownames(pca4.2B_mat) = mat4.2B_fa1$OutcomeGroup
+
+pca4.2Bres = princomp(pca4.2B_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Bres) # Component 1 should suffice
+
+fviz_eig(pca4.2Bres, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+```
+
+Select two immune outcomes from PC1
+```{r}
+fviz_contrib(pca4.2Bres, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+
+```
+
+```{r}
+contrib4.2B.1 = fviz_contrib(pca4.2Bres, axes = 1, choice = "ind")
+#contrib4.2B.2 = fviz_contrib(pca4.2Bres, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2B.1$data[which(contrib4.2B.1$data$contrib >= 8), ]
+#pc2dat = contrib4.2B.2$data[which(contrib4.2B.2$data$contrib >= 10), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_faB_c1 = pcnames1
+
+```
+
+
+
+One PC is sufficient
+```{r}
+mat4.2B_fa2 = mat4.2B_fa_wide %>% filter(OutcomeGroup %in% names2_fa)
+
+pca4.2B_mat = as.matrix(mat4.2B_fa2[, 2:3], nrow = nrow(mat4.2B_fa2), ncol = 2)
+rownames(pca4.2B_mat) = mat4.2B_fa2$OutcomeGroup
+
+pca4.2Bres = princomp(pca4.2B_mat, cor = TRUE, scores = TRUE)
+summary(pca4.2Bres) # Component 1 should suffice
+
+fviz_eig(pca4.2Bres, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+```
+
+Select 1 outcome
+```{r}
+fviz_contrib(pca4.2Bres, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+
+```
+
+
+```{r}
+contrib4.2B.1 = fviz_contrib(pca4.2Bres, axes = 1, choice = "ind")
+#contrib4.2B.2 = fviz_contrib(pca4.2Bres, axes = 2, choice = "ind")
+
+pc1dat = contrib4.2B.1$data[which(contrib4.2B.1$data$contrib >= 10), ]
+#pc2dat = contrib4.2B.2$data[which(contrib4.2B.2$data$contrib >= 10), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_faB_c2 = pcnames1
+
+```
+
+```{r}
+sexclusters_faB = c(sex_faB_c1, sex_faB_c2)
+```
+
+```{r}
+
+# Group A set comparison
+
+Aset_list = list(MVA85A = mvaclusters, QFT = qftclusters, FA = faclusters)
+
+# Number per set
+
+length(mvaclusters)
+length(qftclusters)
+length(faclusters)
+
+# Number of unique immune outcomes
+unique(c(mva_pca_set, qft_pca_set, fa_pca_set))
+
+Aresult = sapply(allA, function(x) {
+  sapply(Aset_list, function(vec) as.numeric(x %in% vec))
+})
+
+Aset_res = t(Aresult)
+Amelt = melt(Aset_res)
+colnames(Amelt) = c("Outcome", "Variable", "Indicator")
+Amelt$Indicator = as.logical(Amelt$Indicator)
+
+ggplot(Amelt, aes(x = Variable, y = Outcome, fill = Indicator)) +
+  geom_tile(color = "black") + theme_bw() +
+  theme(axis.text.y = element_text(size=9, family = "TT Arial"),
+        axis.text.x = element_text(size=10, angle = 0, family = "TT Arial", face = "bold"),
+        axis.title.y = element_blank(), axis.title.x = element_blank(), legend.position = "none") +
+scale_fill_manual(name = "Selected", breaks = c("FALSE", "TRUE"), values = c("lightgrey", "darkcyan"))
+
+
+```
+```
+
