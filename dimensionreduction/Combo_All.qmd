@@ -24,7 +24,7 @@ options(scipen = 999)
 
 # Read in group data
 
-groupA = read_xlsx("data/groupAinfantsData_AD_23Feb2023.xlsx")
+groupA = read_xlsx("groupAinfantsData_AD_23Feb2023.xlsx")
 varA = colnames(groupA[, 17:56])
 
 groupB = read_xlsx("data/groupBinfantsData_AD_23Feb2023.xlsx")
@@ -873,7 +873,7 @@ clusterC4res %>% filter(BH < 0.06) %>% filter(Outcome == v4.2)
 
 ```
 
-Estimate and apply corrections for Cluster 4. There are only signicant differences over time in both groups.
+Estimate and apply corrections for Cluster 5. There are only signicant differences over time in both groups.
 
 ```{r}
 
@@ -3240,15 +3240,37 @@ mat4.2A = tmelt_4A[, c("Outcome", "Group", "Coefficient", "value")]
 
 # Restructure the data frame
 
-mat4.2A$OutcomeGroup = paste(mat4.2A$Outcome, mat4.2A$Group)
-mat4.2A2 = mat4.2A[, c("OutcomeGroup", "Coefficient", "value")]
+mat4.2A_mva = mat4.2A %>% filter(Group == "MVA85A")
+mat4.2A_qft = mat4.2A %>% filter(Group == "QFT")
+mat4.2A_fa = mat4.2A %>% filter(Group %in% c("FA - FA", "FA - BA"))
 
-mat4.2A2_wide = mat4.2A2 %>%
-  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
+# MVA85A data preparation
 
-mat4.2A2 = as.matrix(mat4.2A2_wide[, 2:4], nrow = nrow(mat4.2A2_wide), ncol = 3)
-row.names(mat4.2A2) = mat4.2A_wide$OutcomeGroup
-dist4.2A = get_dist(mat4.2A2, "pearson")
+mat4.2A_mva_wide = mat4.2A_mva %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+mat4.2A2_mva = as.matrix(mat4.2A_mva_wide[, 2:4], nrow = nrow(mat4.2A_mva_wide), ncol = 3)
+row.names(mat4.2A2_mva) = mat4.2A_mva_wide$Outcome
+dist4.2A_mva = get_dist(mat4.2A2_mva, "pearson")
+
+# QFT data preparation
+
+mat4.2A_qft_wide = mat4.2A_qft %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+mat4.2A2_qft = as.matrix(mat4.2A_qft_wide[, 2:4], nrow = nrow(mat4.2A_qft_wide), ncol = 3)
+row.names(mat4.2A2_qft) = mat4.2A_qft_wide$Outcome
+dist4.2A_qft = get_dist(mat4.2A2_qft, "pearson")
+
+# FA data preparation
+
+mat4.2A_fa_wide = mat4.2A_fa %>%
+  pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
+
+mat4.2A2_fa = as.matrix(cbind(unlist(mat4.2A_fa_wide[, 2]), unlist(mat4.2A_fa_wide[, 3]), unlist(mat4.2A_fa_wide[, 4])), nrow = nrow(mat4.2A_fa_wide), ncol = 3)
+row.names(mat4.2A2_fa) = mat4.2A_fa_wide$OutcomeGroup
+dist4.2A_fa = get_dist(mat4.2A2_fa, "pearson")
+
 ```
 
 
@@ -3354,7 +3376,7 @@ fviz_contrib(pca4.2Ares, axes = 1, choice = "var")
 ```
 The names of these 2 immune outcomes are printed below.
 ```{r}
-contrib4.2A.1 = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+contrib4.2A.1 = fviz_contrib(pca4.2Bres, axes = 1, choice = "ind")
 #contrib2.2A.2 = fviz_contrib(pca2.2Ares, axes = 2, choice = "ind")
 
 pc1dat = contrib4.2A.1$data[which(contrib4.2A.1$data$contrib >= 20), ]
@@ -3718,7 +3740,17 @@ sexclusters = c(sex_pca_set1, sex_pca_set2, sex_pca_set3, sex_pca_set4, sex_pca_
 
 # Group A set comparison
 
-Aset_list = list(MVA85A = mvaclusters, QFT = qftclusters, FA = faclusters, Sex = sexclusters)
+Aset_list = list(MVA85A = mvaclusters, QFT = qftclusters, FA = faclusters)
+
+# Number of outcomes
+
+length(mvaclusters)
+length(qftclusters)
+length(faclusters)
+
+# Number of unique outcomes
+
+
 
 Aresult = sapply(allA, function(x) {
   sapply(Aset_list, function(vec) as.numeric(x %in% vec))
@@ -3733,8 +3765,8 @@ library(extrafont)
 loadfonts(device = "win")  # For Windows users
 windowsFonts()
 
-ggplot(Amelt, aes(x = Variable, y = reorder(Outcome, Indicator), fill = Indicator)) +
-  geom_tile(color = "black") + theme_minimal() +
+ggplot(Amelt, aes(x = Variable, y = Outcome, fill = Indicator)) +
+  geom_tile(color = "black") + theme_bw() +
   theme(axis.text.y = element_text(size=9, family = "TT Arial"),
         axis.text.x = element_text(size=10, angle = 0, family = "TT Arial", face = "bold"),
         axis.title.y = element_blank(), axis.title.x = element_blank(), legend.position = "none") +
@@ -3755,7 +3787,7 @@ mat1.2B = mat1.2B %>%
 mat1.2B_wide = mat1.2B %>%
   pivot_wider(names_from = Coefficient, id_cols = Outcome, values_from = value)
 
-mat1.2B = as.matrix(mat1.2B_wide[, 2:3], nrow = nrow(mat1.2A_wide), ncol = 2)
+mat1.2B = as.matrix(mat1.2B_wide[, 2:3], nrow = nrow(mat1.2B_wide), ncol = 2)
 row.names(mat1.2B) = mat1.2B_wide$Outcome
 dist1.2B = get_dist(mat1.2B, "pearson")
 
