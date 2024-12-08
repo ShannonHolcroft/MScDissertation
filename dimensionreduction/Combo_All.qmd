@@ -3239,11 +3239,19 @@ clusterC2resB %>% filter(BH < 0.06) %>% filter(Outcome == v2.2B)
 mat4.2A = tmelt_4A[, c("Outcome", "Group", "Coefficient", "value")]
 mat4.2A$OutcomeGroup = paste(mat4.2A$Outcome, mat4.2A$Group)
 
+mat4.2B = tmelt_4B[, c("Outcome", "Group", "Coefficient", "value")]
+mat4.2B$OutcomeGroup = paste(mat4.2B$Outcome, mat4.2B$Group)
+
+
 # Restructure the data frame
 
 mat4.2A_mva = mat4.2A %>% filter(Group == "MVA85A")
 mat4.2A_qft = mat4.2A %>% filter(Group == "QFT")
 mat4.2A_fa = mat4.2A %>% filter(Group %in% c("FA - FA", "FA - BA"))
+
+mat4.2B_mva = mat4.2B %>% filter(Group == "MVA85A")
+mat4.2B_qft = mat4.2B %>% filter(Group == "QFT")
+mat4.2B_fa = mat4.2B %>% filter(Group %in% c("FA - FA", "FA - BA"))
 
 # MVA85A data preparation
 
@@ -3254,6 +3262,13 @@ mat4.2A2_mva = as.matrix(mat4.2A_mva_wide[, 2:4], nrow = nrow(mat4.2A_mva_wide),
 row.names(mat4.2A2_mva) = mat4.2A_mva_wide$OutcomeGroup
 dist4.2A_mva = get_dist(mat4.2A2_mva, "pearson")
 
+mat4.2B_mva_wide = mat4.2B_mva %>%
+  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
+
+mat4.2B2_mva = as.matrix(mat4.2B_mva_wide[, 2:3], nrow = nrow(mat4.2B_mva_wide), ncol = 2)
+row.names(mat4.2B2_mva) = mat4.2B_mva_wide$OutcomeGroup
+dist4.2B_mva = get_dist(mat4.2B2_mva, "pearson")
+
 # QFT data preparation
 
 mat4.2A_qft_wide = mat4.2A_qft %>%
@@ -3262,6 +3277,13 @@ mat4.2A_qft_wide = mat4.2A_qft %>%
 mat4.2A2_qft = as.matrix(mat4.2A_qft_wide[, 2:4], nrow = nrow(mat4.2A_qft_wide), ncol = 3)
 row.names(mat4.2A2_qft) = mat4.2A_qft_wide$OutcomeGroup
 dist4.2A_qft = get_dist(mat4.2A2_qft, "pearson")
+
+mat4.2B_qft_wide = mat4.2B_qft %>%
+  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
+
+mat4.2B2_qft = as.matrix(mat4.2B_qft_wide[, 2:3], nrow = nrow(mat4.2B_qft_wide), ncol = 2)
+row.names(mat4.2B2_qft) = mat4.2B_qft_wide$OutcomeGroup
+dist4.2B_qft = get_dist(mat4.2B2_qft, "pearson")
 
 # FA data preparation
 
@@ -3272,6 +3294,13 @@ mat4.2A2_fa = as.matrix(mat4.2A_fa_wide[, 2:4], nrow = nrow(mat4.2A_fa_wide), nc
 row.names(mat4.2A2_fa) = mat4.2A_fa_wide$OutcomeGroup
 dist4.2A_fa = get_dist(mat4.2A2_fa, "pearson")
 
+mat4.2B_fa_wide = mat4.2B_fa %>%
+  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
+
+mat4.2B2_fa = as.matrix(mat4.2B_fa_wide[, 2:3], nrow = nrow(mat4.2B_fa_wide), ncol = 2)
+row.names(mat4.2B2_fa) = mat4.2B_fa_wide$OutcomeGroup
+dist4.2B_fa = get_dist(mat4.2B2_fa, "pearson")
+
 ```
 
 
@@ -3280,9 +3309,14 @@ dist4.2A_fa = get_dist(mat4.2A2_fa, "pearson")
 res4.2.hclust_mva = as.hclust(agnes(dist4.2A_mva, diss = TRUE, method = "average"))
 res4.2.hclust_qft = as.hclust(agnes(dist4.2A_qft, diss = TRUE, method = "average"))
 res4.2.hclust_fa = as.hclust(agnes(dist4.2A_fa, diss = TRUE, method = "average"))
+
+res4.2.hclust_mvaB = as.hclust(agnes(dist4.2B_mva, diss = TRUE, method = "average"))
+res4.2.hclust_qftB = as.hclust(agnes(dist4.2B_qft, diss = TRUE, method = "average"))
+res4.2.hclust_faB = as.hclust(agnes(dist4.2B_fa, diss = TRUE, method = "average"))
+
 ```
 
-There are effectively 10 groups. Perf+ Ki67+ CD4 is a singleton, but the others require representatives.
+
 ```{r}
 
 hcdata4.2_mva = dendro_data_k(res4.2.hclust_mva, 5)
@@ -4608,6 +4642,30 @@ scale_fill_manual(name = "Selected", breaks = c("FALSE", "TRUE"), values = c("li
 
 ```
 
+```{r}
+
+hcdata4.2B_mva = dendro_data_k(res4.2.hclust_mvaB, 2)
+
+p = plot_ggdendro(hcdata4.2B_mva,
+                   direction   = "rl",
+                   expand.y    = 0.25) 
+p + ylab("Link Height") + geom_hline(yintercept = 0.2) + theme(axis.title.y = element_blank())
+
+hcdata4.2B_qft = dendro_data_k(res4.2.hclust_qftB, 2)
+
+p = plot_ggdendro(hcdata4.2B_qft,
+                   direction   = "rl",
+                   expand.y    = 0.25) 
+p + ylab("Link Height") + geom_hline(yintercept = 0.2) + theme(axis.title.y = element_blank())
+
+hcdata4.2B_fa = dendro_data_k(res4.2.hclust_faB, 2)
+
+p = plot_ggdendro(hcdata4.2B_fa,
+                   direction   = "rl",
+                   expand.y    = 0.25) 
+p + ylab("Link Height") + geom_hline(yintercept = 0.2) + theme(axis.title.y = element_blank())
+
+```
 
 ```{r}
 
