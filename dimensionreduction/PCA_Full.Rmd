@@ -183,66 +183,6 @@ tmelt_4B = melt(dat4B) %>% filter(variable == "EstOverSE")
 
 ```
 
-## Make some heat maps to visualize what we're putting into the PCA
-
-```{r}
-
-ggplot(tmelt_1A, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
-  geom_tile(color = "black") +
-  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
-  scale_fill_gradient2(low = "#075AFF",
-                       mid = "white",
-                       high = "#FF0000") + coord_fixed()
-
-ggplot(tmelt_2A, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
-  geom_tile(color = "black") +
-  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
-  scale_fill_gradient2(low = "#075AFF",
-                       mid = "white",
-                       high = "#FF0000") + coord_fixed()
-
-ggplot(tmelt_3A, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
-  geom_tile(color = "black") +
-  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
-  scale_fill_gradient2(low = "#075AFF",
-                       mid = "white",
-                       high = "#FF0000") + coord_fixed()
-
-ggplot(tmelt_4A, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
-  geom_tile(color = "black") +
-  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
-  scale_fill_gradient2(low = "#075AFF",
-                       mid = "white",
-                       high = "#FF0000") + coord_fixed()
-
-ggplot(tmelt_1B, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
-  geom_tile(color = "black") +
-  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
-  scale_fill_gradient2(low = "#075AFF",
-                       mid = "white",
-                       high = "#FF0000") + coord_fixed()
-
-ggplot(tmelt_2B, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
-  geom_tile(color = "black") +
-  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
-  scale_fill_gradient2(low = "#075AFF",
-                       mid = "white",
-                       high = "#FF0000") + coord_fixed()
-
-ggplot(tmelt_3B, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
-  geom_tile(color = "black") +
-  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
-  scale_fill_gradient2(low = "#075AFF",
-                       mid = "white",
-                       high = "#FF0000") + coord_fixed()
-
-ggplot(tmelt_4B, aes(x = Coefficient, y = reorder(Outcome, value), fill = value)) +
-  geom_tile(color = "black") +
-  theme(axis.text.y = element_text(size=5), axis.text.x = element_text(size=7, angle = 90), axis.title.y = element_blank(), axis.title.x = element_blank(), legend.title = element_blank()) +
-  scale_fill_gradient2(low = "#075AFF",
-                       mid = "white",
-                       high = "#FF0000") + coord_fixed()
-```
 
 ## Principal Component Analysis
 
@@ -475,7 +415,7 @@ contrib3.2A.1 = fviz_contrib(pca3.2Ares, axes = 1, choice = "ind")
 contrib3.2A.2 = fviz_contrib(pca3.2Ares, axes = 2, choice = "ind")
 
 pc1dat = contrib3.2A.1$data[which(contrib3.2A.1$data$contrib >= 3), ]
-pc2dat = contrib3.2A.2$data[which(contrib3.2A.2$data$contrib >= 3), ]
+pc2dat = contrib3.2A.2$data[which(contrib3.2A.2$data$contrib >= 2.5), ]
 
 pcnames1 = as.character(unique(c(pc1dat$name, pc2dat$name)))
 
@@ -543,21 +483,21 @@ contrast_list = list(
   
   # Comparisons within Control
   
-  "Control_T2_vs_T1" = setNames(c(1, 0, -1, 0, 0, 0), combination_names),
-  "Control_T2_vs_T3" = setNames(c(1, 0, 0, 0, -1, 0), combination_names),
-  "Control_T1_vs_T3" = setNames(c(0, 0, 1, 0, -1, 0), combination_names),
+  "Control_T2_vs_T1" = setNames(c(-1, 0, 1, 0, 0, 0), combination_names),
+  "Control_T2_vs_T3" = setNames(c(-1, 0, 0, 0, 1, 0), combination_names),
+  "Control_T1_vs_T3" = setNames(c(0, 0, -1, 0, 1, 0), combination_names),
   
   # Comparisons within MVA85A
   
-  "MVA85A_T2_vs_T1" = setNames(c(0, 1, 0, -1, 0, 0), combination_names),
-  "MVA85A_T2_vs_T3" = setNames(c(0, 1, 0, 0, 0, -1), combination_names),
-  "MVA85A_T1_vs_T3" = setNames(c(0, 0, 0, 1, 0, -1), combination_names),
+  "MVA85A_T2_vs_T1" = setNames(c(0, -1, 0, 1, 0, 0), combination_names),
+  "MVA85A_T2_vs_T3" = setNames(c(0, -1, 0, 0, 0, 1), combination_names),
+  "MVA85A_T1_vs_T3" = setNames(c(0, 0, 0, -1, 0, 1), combination_names),
   
   # Comparisons between Control and MVA85A
   
-  "T2_Control_vs_MVA85A" = setNames(c(1, -1, 0, 0, 0, 0), combination_names),
-  "T1_Control_vs_MVA85A" = setNames(c(0, 0, 1, -1, 0, 0), combination_names),
-  "T3_Control_vs_MVA85A" = setNames(c(0, 0, 0, 0, 1, -1), combination_names)
+  "T2_Control_vs_MVA85A" = setNames(c(-1, 1, 0, 0, 0, 0), combination_names),
+  "T1_Control_vs_MVA85A" = setNames(c(0, 0, -1, 1, 0, 0), combination_names),
+  "T3_Control_vs_MVA85A" = setNames(c(0, 0, 0, 0, -1, 1), combination_names)
 )
 
 contrast_list
@@ -604,32 +544,111 @@ mvapcares = mvapcares %>% arrange(p.value)
 mvapcares$BH = p.adjust(mvapcares$p.value, method = "BH", n = length(mvapcares$p.value))
 mvapcares$BY = p.adjust(mvapcares$p.value, method = "BY", n = length(mvapcares$p.value))
 
+# Reflected outcomes need to be multiplied by -1
+
+reflected = c(mva_pca_set[7:9])
+
+mvapcares$estimate = ifelse(mvapcares$Outcome %in% reflected, mvapcares$estimate * -1, mvapcares$estimate * 1)
+
 mvapcares$expestimate = exp(mvapcares$estimate)
 
-mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.1)
+mvapcares %>% filter(BH < 0.15)
 
-mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.2)
+```
 
-mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.3)
+```{r}
+# Adjustments
 
-mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.4)
+# For FA
 
-mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.5)
+AM_1.2x =glmmTMB(O17 ~ Treatment*Time + Gender*Time + FA + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_1.2x = summary(AM_1.2x)
 
-mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.6)
+emm1.2x = emmeans(AM_1.2x, ~ Treatment * Time)
+contrasts1.2x = data.frame(contrast(emm1.2x, method = contrast_list, adjust = "none"))
+v1.2x = paste0(v1.2, "+ FA")
+contrasts1.2x$Outcome = v1.2x
 
-mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.7)
+AM_1.3x = glmmTMB(O20 ~ Treatment*Time + Gender*Time + FA + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.3x = summary(AM_1.3x)
 
-mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.8)
+emm1.3x = emmeans(AM_1.3x, ~ Treatment * Time)
+contrasts1.3x = data.frame(contrast(emm1.3x, method = contrast_list, adjust = "none"))
+v1.3x = paste0(v1.3, "+ FA")
+contrasts1.3x$Outcome = v1.3x
 
-mvapcares %>% filter(BH < 0.06) %>% filter(Outcome == v1.9)
+AM_1.4x = glmmTMB(O31 ~ Treatment*Time + Gender*Time + QFT + FA + (1| ID), data = groupA, family = poisson(link = "log"))
+AS_1.4x = summary(AM_1.4x)
+
+
+emm1.4x = emmeans(AM_1.4x, ~ Treatment * Time)
+contrasts1.4x = data.frame(contrast(emm1.4x, method = contrast_list, adjust = "none"))
+v1.4x = paste0(v1.4, "+ QFT + FA")
+contrasts1.4x$Outcome = v1.4x
+
+AM_1.5x = glmmTMB(O27 ~ Treatment*Time + Gender*Time + FA + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.5x = summary(AM_1.5x)
+
+emm1.5x = emmeans(AM_1.5x, ~ Treatment * Time)
+contrasts1.5x = data.frame(contrast(emm1.5x, method = contrast_list, adjust = "none"))
+v1.5x = paste0(v1.5, "+ FA")
+contrasts1.5x$Outcome = v1.5x
+
+AM_1.6x = glmmTMB(O25 ~ Treatment*Time + Gender*Time + QFT + FA + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.6x = summary(AM_1.6x)
+
+emm1.6x = emmeans(AM_1.6x, ~ Treatment * Time)
+contrasts1.6x = data.frame(contrast(emm1.6x, method = contrast_list, adjust = "none"))
+v1.6x = paste0(v1.6, " QFT + FA")
+contrasts1.6x$Outcome = v1.6x
+
+AM_1.7x = glmmTMB(94-O15 ~ Treatment*Time + Gender*Time + FA + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.7x = summary(AM_1.7x)
+
+emm1.7x = emmeans(AM_1.7x, ~ Treatment * Time)
+contrasts1.7x = data.frame(contrast(emm1.7x, method = contrast_list, adjust = "none"))
+v1.7x = paste0(v1.7, " + FA")
+contrasts1.7x$Outcome = v1.7x
+
+AM_1.8x = glmmTMB(101 - O19 ~ Treatment*Time + Gender*Time + FA + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_1.8x = summary(AM_1.8x)
+
+emm1.8x = emmeans(AM_1.8x, ~ Treatment * Time)
+contrasts1.8x = data.frame(contrast(emm1.8x, method = contrast_list, adjust = "none"))
+v1.8x = paste0(v1.8, " + FA")
+contrasts1.8x$Outcome = v1.8x
+
+AM_1.9x = glmmTMB(101 - O36 ~ Treatment*Time + Gender*Time + QFT + FA + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_1.9x = summary(AM_1.9x)
+
+emm1.9x = emmeans(AM_1.9x, ~ Treatment * Time)
+contrasts1.9x = data.frame(contrast(emm1.9x, method = contrast_list, adjust = "none"))
+v1.9x = paste0(v1.9, " QFT + FA")
+contrasts1.9x$Outcome = v1.9x
+
+mvapcares = rbind(contrasts1.1, contrasts1.2x, contrasts1.3x, contrasts1.4x,
+                  contrasts1.5x, contrasts1.6x, contrasts1.7x, contrasts1.8x, contrasts1.9x)
+mvapcares = mvapcares %>% arrange(p.value)
+
+mvapcares$BH = p.adjust(mvapcares$p.value, method = "BH", n = length(mvapcares$p.value))
+mvapcares$BY = p.adjust(mvapcares$p.value, method = "BY", n = length(mvapcares$p.value))
+
+# Reflected outcomes need to be multiplied by -1
+
+# Reflected outcomes need to be multiplied by -1
+
+reflected = c(mvapcares$Outcome[9], mvapcares$Outcome[80], mvapcares$Outcome[22])
+
+mvapcares$estimate = ifelse(mvapcares$Outcome %in% reflected, mvapcares$estimate * -1, mvapcares$estimate * 1)
+
+mvapcares$expestimate = exp(mvapcares$estimate)
+
+mvapcares %>% filter(BH < 0.15)
 
 ```
 
 ```{r}
 # QFT
-
-qft_pca_set
 
 AM_2.1 = glmmTMB(O13 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_2.1 = summary(AM_2.1)
@@ -664,7 +683,10 @@ AS_2.10 = summary(AM_2.10)
 AM_2.11 = glmmTMB(101 - O36 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_2.11 = summary(AM_2.11)
 
-n2 = length(qft_pca_set)
+AM_2.11x = glmmTMB(101 - O36 ~ QFT*Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.11x = summary(AM_2.11x)
+
+#n2 = length(qft_pca_set)
 
 v2.1 = varA[13]
 v2.2 = varA[16]
@@ -695,21 +717,21 @@ contrast_list = list(
   
   # Comparisons within Negative
   
-  "Negative_T2_vs_T1" = setNames(c(1, 0, -1, 0, 0, 0), combination_names),
-  "Negative_T2_vs_T3" = setNames(c(1, 0, 0, 0, -1, 0), combination_names),
-  "Negative_T1_vs_T3" = setNames(c(0, 0, 1, 0, -1, 0), combination_names),
+  "Negative_T2_vs_T1" = setNames(c(-1, 0, 1, 0, 0, 0), combination_names),
+  "Negative_T2_vs_T3" = setNames(c(-1, 0, 0, 0, 1, 0), combination_names),
+  "Negative_T1_vs_T3" = setNames(c(0, 0, -1, 0, 1, 0), combination_names),
   
   # Comparisons within Positive
   
-  "Positive_T2_vs_T1" = setNames(c(0, 1, 0, -1, 0, 0), combination_names),
-  "Positive_T2_vs_T3" = setNames(c(0, 1, 0, 0, 0, -1), combination_names),
-  "Positive_T1_vs_T3" = setNames(c(0, 0, 0, 1, 0, -1), combination_names),
+  "Positive_T2_vs_T1" = setNames(c(0, -1, 0, 1, 0, 0), combination_names),
+  "Positive_T2_vs_T3" = setNames(c(0, -1, 0, 0, 0, 1), combination_names),
+  "Positive_T1_vs_T3" = setNames(c(0, 0, 0, -1, 0, 1), combination_names),
   
   # Comparisons between Negative and Positive
   
-  "T2_Negative_vs_Positive" = setNames(c(1, -1, 0, 0, 0, 0), combination_names),
-  "T1_Negative_vs_Positive" = setNames(c(0, 0, 1, -1, 0, 0), combination_names),
-  "T3_Negative_vs_Positive" = setNames(c(0, 0, 0, 0, 1, -1), combination_names)
+  "T2_Negative_vs_Positive" = setNames(c(-1, 1, 0, 0, 0, 0), combination_names),
+  "T1_Negative_vs_Positive" = setNames(c(0, 0, -1, 1, 0, 0), combination_names),
+  "T3_Negative_vs_Positive" = setNames(c(0, 0, 0, 0, -1, 1), combination_names)
 )
 
 contrast_list
@@ -731,61 +753,142 @@ emm2.10 = emmeans(AM_2.10, ~ QFT * Time)
 emm2.11 = emmeans(AM_2.11, ~ QFT * Time)
 
 # Apply custom contrasts
-contrasts1.1 = data.frame(contrast(emm2.1, method = contrast_list, adjust = "none"))
-contrasts1.2 = data.frame(contrast(emm2.2, method = contrast_list, adjust = "none"))
-contrasts1.3 = data.frame(contrast(emm2.3, method = contrast_list, adjust = "none"))
-contrasts1.4 = data.frame(contrast(emm2.4, method = contrast_list, adjust = "none"))
-contrasts1.5 = data.frame(contrast(emm2.5, method = contrast_list, adjust = "none"))
-contrasts1.6 = data.frame(contrast(emm2.6, method = contrast_list, adjust = "none"))
-contrasts1.7 = data.frame(contrast(emm2.7, method = contrast_list, adjust = "none"))
-contrasts1.8 = data.frame(contrast(emm2.8, method = contrast_list, adjust = "none"))
-contrasts1.9 = data.frame(contrast(emm2.9, method = contrast_list, adjust = "none"))
-contrasts1.10 = data.frame(contrast(emm2.10, method = contrast_list, adjust = "none"))
-contrasts1.11 = data.frame(contrast(emm2.11, method = contrast_list, adjust = "none"))
+contrasts2.1 = data.frame(contrast(emm2.1, method = contrast_list, adjust = "none"))
+contrasts2.2 = data.frame(contrast(emm2.2, method = contrast_list, adjust = "none"))
+contrasts2.3 = data.frame(contrast(emm2.3, method = contrast_list, adjust = "none"))
+contrasts2.4 = data.frame(contrast(emm2.4, method = contrast_list, adjust = "none"))
+contrasts2.5 = data.frame(contrast(emm2.5, method = contrast_list, adjust = "none"))
+contrasts2.6 = data.frame(contrast(emm2.6, method = contrast_list, adjust = "none"))
+contrasts2.7 = data.frame(contrast(emm2.7, method = contrast_list, adjust = "none"))
+contrasts2.8 = data.frame(contrast(emm2.8, method = contrast_list, adjust = "none"))
+contrasts2.9 = data.frame(contrast(emm2.9, method = contrast_list, adjust = "none"))
+contrasts2.10 = data.frame(contrast(emm2.10, method = contrast_list, adjust = "none"))
+contrasts2.11 = data.frame(contrast(emm2.11, method = contrast_list, adjust = "none"))
 
-contrasts1.1$Outcome = v2.1
-contrasts1.2$Outcome = v2.2
-contrasts1.3$Outcome = v2.3
-contrasts1.4$Outcome = v2.4
-contrasts1.5$Outcome = v2.5
-contrasts1.6$Outcome = v2.6
-contrasts1.7$Outcome = v2.7
-contrasts1.8$Outcome = v2.8
-contrasts1.9$Outcome = v2.9
-contrasts1.10$Outcome = v2.10
-contrasts1.11$Outcome = v2.11
+contrasts2.1$Outcome = v2.1
+contrasts2.2$Outcome = v2.2
+contrasts2.3$Outcome = v2.3
+contrasts2.4$Outcome = v2.4
+contrasts2.5$Outcome = v2.5
+contrasts2.6$Outcome = v2.6
+contrasts2.7$Outcome = v2.7
+contrasts2.8$Outcome = v2.8
+contrasts2.9$Outcome = v2.9
+contrasts2.10$Outcome = v2.10
+contrasts2.11$Outcome = v2.11
 
-qftpcares = rbind(contrasts1.1, contrasts1.2, contrasts1.3, contrasts1.4,
-                  contrasts1.5, contrasts1.6, contrasts1.7, contrasts1.8, contrasts1.9,
-                  contrasts1.10, contrasts1.11)
+qftpcares = rbind(contrasts2.1, contrasts2.2, contrasts2.3, contrasts2.4,
+                  contrasts2.5, contrasts2.6, contrasts2.7, contrasts2.8, contrasts2.9,
+                  contrasts2.10, contrasts2.11)
 qftpcares = qftpcares %>% arrange(p.value)
 
 qftpcares$BH = p.adjust(qftpcares$p.value, method = "BH", n = length(qftpcares$p.value))
 qftpcares$BY = p.adjust(qftpcares$p.value, method = "BY", n = length(qftpcares$p.value))
 
+qftpcares$estimate = ifelse(qftpcares$Outcome %in% v2.11, qftpcares$estimate * -1, qftpcares$estimate * 1)
+
 qftpcares$expestimate = exp(qftpcares$estimate)
 
-qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.1)
+contrasts2.11x$expestimate = exp(contrasts2.11x$estimate)
 
-qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.2)
+qftpcares %>% filter(BH < 0.15)
 
-qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.3)
+```
 
-qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.4)
+```{r}
 
-qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.5)
+# Adjust for FA
 
-qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.6)
+AM_2.1x = glmmTMB(O13 ~ QFT*Time + Gender*Time + FA + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.1x = summary(AM_2.1x)
 
-qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.7)
+emm2.1x = emmeans(AM_2.1x, ~ QFT * Time)
+contrasts2.1x = data.frame(contrast(emm2.1x, method = contrast_list, adjust = "none"))
+v2.1x = paste0(v2.1, " + FA")
+contrasts2.1x$Outcome = v2.1x
 
-qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.8)
+# Adjust for FA
 
-qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.9)
+AM_2.2x = glmmTMB(O16 ~ QFT*Time + Gender*Time + FA + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_2.2x = summary(AM_2.2x)
 
-qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.10)
+emm2.2x = emmeans(AM_2.2x, ~ QFT * Time)
+contrasts2.2x = data.frame(contrast(emm2.2x, method = contrast_list, adjust = "none"))
+v2.2x = paste0(v2.2, " + FA")
+contrasts2.2x$Outcome = v2.2x
 
-qftpcares %>% filter(BH < 0.06) %>% filter(Outcome == v2.11)
+# Adjust for FA
+
+AM_2.3x = glmmTMB(O21 ~ QFT*Time + Gender*Time + FA + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_2.3x = summary(AM_2.3x)
+
+emm2.3x = emmeans(AM_2.3x, ~ QFT * Time)
+contrasts2.3x = data.frame(contrast(emm2.3x, method = contrast_list, adjust = "none"))
+v2.3x = paste0(v2.3, " + FA")
+contrasts2.3x$Outcome = v2.3x
+
+# Adjust for FA
+
+AM_2.4x = glmmTMB(O18 ~ QFT*Time + Gender*Time + FA + (1| ID), data = groupA, family = Gamma(link = "log"))
+AS_2.4x = summary(AM_2.4x)
+
+emm2.4x = emmeans(AM_2.4x, ~ QFT * Time)
+contrasts2.4x = data.frame(contrast(emm2.4x, method = contrast_list, adjust = "none"))
+v2.4x = paste0(v2.4, " + FA")
+contrasts2.4x$Outcome = v2.4x
+
+# Adjust for FA
+
+AM_2.6x = glmmTMB(O23 ~ QFT*Time + Gender*Time + FA + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.6x = summary(AM_2.6x)
+
+emm2.6x = emmeans(AM_2.6x, ~ QFT * Time)
+contrasts2.6x = data.frame(contrast(emm2.6x, method = contrast_list, adjust = "none"))
+v2.6x = paste0(v2.6, " + FA")
+contrasts2.6x$Outcome = v2.6x
+
+# Adjust for MVA85A and FA
+
+AM_2.8x = glmmTMB(O31 ~ QFT*Time + Gender*Time + Treatment + FA + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.8x = summary(AM_2.8x)
+
+emm2.8x = emmeans(AM_2.8x, ~ QFT * Time)
+contrasts2.8x = data.frame(contrast(emm2.8x, method = contrast_list, adjust = "none"))
+v2.8x = paste0(v2.8, " + MVA85A + FA")
+contrasts2.8x$Outcome = v2.8x
+
+# Adjust for MVA85A and FA
+
+AM_2.9x = glmmTMB(O25 ~ QFT*Time + Gender*Time + Treatment + FA + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.9x = summary(AM_2.9x)
+
+emm2.9x = emmeans(AM_2.9x, ~ QFT * Time)
+contrasts2.9x = data.frame(contrast(emm2.9x, method = contrast_list, adjust = "none"))
+v2.9x = paste0(v2.9, " + MVA85A + FA")
+contrasts2.9x$Outcome = v2.9x
+
+# Adjust for MVA85A and FA
+
+AM_2.11x = glmmTMB(101 - O36 ~ QFT*Time + Gender*Time + Treatment + FA + (1| ID), data = groupA, family = tweedie(link = "log"))
+AS_2.11x = summary(AM_2.11x)
+
+emm2.11x = emmeans(AM_2.11x, ~ QFT * Time)
+contrasts2.11x = data.frame(contrast(emm2.11x, method = contrast_list, adjust = "none"))
+v2.11x = paste0(v2.11, " + MVA85A + FA")
+contrasts2.11x$Outcome = v2.11x
+
+qftpcares = rbind(contrasts2.1x, contrasts2.2x, contrasts2.3x, contrasts2.4x,
+                  contrasts2.5, contrasts2.6x, contrasts2.7, contrasts2.8x, contrasts2.9x, contrasts2.10, contrasts2.11x)
+qftpcares = qftpcares %>% arrange(p.value)
+
+qftpcares$BH = p.adjust(qftpcares$p.value, method = "BH", n = length(qftpcares$p.value))
+qftpcares$BY = p.adjust(qftpcares$p.value, method = "BY", n = length(qftpcares$p.value))
+
+qftpcares$estimate = ifelse(qftpcares$Outcome %in% qftpcares$Outcome[81], qftpcares$estimate * -1, qftpcares$estimate * 1)
+
+qftpcares$expestimate = exp(qftpcares$estimate)
+
+qftpcares %>% filter(BH < 0.15)
 
 ```
 
@@ -837,7 +940,7 @@ AS_3.14 = summary(AM_3.14)
 AM_3.15 = glmmTMB(O27 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_3.15 = summary(AM_3.15)
 
-n3 = length(fa_pca_set)
+#n3 = length(fa_pca_set)
 
 v3.1 = varA[17]
 v3.2 = varA[21]
@@ -874,47 +977,47 @@ contrast_list = list(
   
   # Comparisons within FA0
   
-  "FA0_T2_vs_T1" = setNames(c(1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0), combination_names),
-  "FA0_T2_vs_T3" = setNames(c(1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0), combination_names),
-  "FA0_T1_vs_T3" = setNames(c(0, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0), combination_names),
+  "FA0_T2_vs_T1" = setNames(c(-1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0), combination_names),
+  "FA0_T2_vs_T3" = setNames(c(-1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0), combination_names),
+  "FA0_T1_vs_T3" = setNames(c(0, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0), combination_names),
   
   # Comparisons within FA1
   
-  "FA1_T2_vs_T1" = setNames(c(0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0), combination_names),
-  "FA1_T2_vs_T3" = setNames(c(0, 1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0), combination_names),
-  "FA1_T1_vs_T3" = setNames(c(0, 0, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0), combination_names),
+  "FA1_T2_vs_T1" = setNames(c(0, -1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0), combination_names),
+  "FA1_T2_vs_T3" = setNames(c(0, -1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0), combination_names),
+  "FA1_T1_vs_T3" = setNames(c(0, 0, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0), combination_names),
   
   # Comparisons within FA2
   
-  "FA2_T2_vs_T1" = setNames(c(0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0), combination_names),
-  "FA2_T2_vs_T3" = setNames(c(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, -1, 0), combination_names),
-  "FA2_T1_vs_T3" = setNames(c(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, -1, 0), combination_names),
+  "FA2_T2_vs_T1" = setNames(c(0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 0, 0), combination_names),
+  "FA2_T2_vs_T3" = setNames(c(0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 1, 0), combination_names),
+  "FA2_T1_vs_T3" = setNames(c(0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 1, 0), combination_names),
   
   # Comparisons within FA3
   
-  "FA3_T2_vs_T1" = setNames(c(0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 0), combination_names),
-  "FA3_T2_vs_T3" = setNames(c(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, -1), combination_names),
-  "FA3_T1_vs_T3" = setNames(c(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, -1), combination_names),
+  "FA3_T2_vs_T1" = setNames(c(0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 0), combination_names),
+  "FA3_T2_vs_T3" = setNames(c(0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 1), combination_names),
+  "FA3_T1_vs_T3" = setNames(c(0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 1), combination_names),
   
   
   # Comparisons between FA0 and FA3
   
-  "T2_FA0_vs_FA3" = setNames(c(1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0), combination_names),
-  "T1_FA0_vs_FA3" = setNames(c(0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0), combination_names),
-  "T3_FA0_VS_FA3" = setNames(c(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, -1), combination_names),
+  "T2_FA0_vs_FA3" = setNames(c(-1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0), combination_names),
+  "T1_FA0_vs_FA3" = setNames(c(0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0), combination_names),
+  "T3_FA0_VS_FA3" = setNames(c(0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 1), combination_names),
   
   # Comparisons between FA0 and FA1
   
-  "T2_FA0_vs_FA1" = setNames(c(1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), combination_names),
-  "T1_FA0_vs_FA1" = setNames(c(0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0), combination_names),
-  "T3_FA0_VS_FA1" = setNames(c(0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0), combination_names),
+  "T2_FA0_vs_FA1" = setNames(c(-1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), combination_names),
+  "T1_FA0_vs_FA1" = setNames(c(0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0), combination_names),
+  "T3_FA0_VS_FA1" = setNames(c(0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0), combination_names),
   
   
   # Comparisons between FA2 and FA3
   
-  "T2_FA2_vs_FA3" = setNames(c(0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0), combination_names),
-  "T1_FA2_vs_FA3" = setNames(c(0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0), combination_names),
-  "T3_FA2_VS_FA3" = setNames(c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1), combination_names)
+  "T2_FA2_vs_FA3" = setNames(c(0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0), combination_names),
+  "T1_FA2_vs_FA3" = setNames(c(0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0), combination_names),
+  "T3_FA2_VS_FA3" = setNames(c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1), combination_names)
   
   
 )
@@ -942,79 +1045,174 @@ emm3.14 = emmeans(AM_3.14, ~ FA * Time)
 emm3.15 = emmeans(AM_3.15, ~ FA * Time)
 
 # Apply custom contrasts
-contrasts1.1 = data.frame(contrast(emm3.1, method = contrast_list, adjust = "none"))
-contrasts1.2 = data.frame(contrast(emm3.2, method = contrast_list, adjust = "none"))
-contrasts1.3 = data.frame(contrast(emm3.3, method = contrast_list, adjust = "none"))
-contrasts1.4 = data.frame(contrast(emm3.4, method = contrast_list, adjust = "none"))
-contrasts1.5 = data.frame(contrast(emm3.5, method = contrast_list, adjust = "none"))
-contrasts1.6 = data.frame(contrast(emm3.6, method = contrast_list, adjust = "none"))
-contrasts1.7 = data.frame(contrast(emm3.7, method = contrast_list, adjust = "none"))
-contrasts1.8 = data.frame(contrast(emm3.8, method = contrast_list, adjust = "none"))
-contrasts1.9 = data.frame(contrast(emm3.9, method = contrast_list, adjust = "none"))
-contrasts1.10 = data.frame(contrast(emm3.10, method = contrast_list, adjust = "none"))
-contrasts1.11 = data.frame(contrast(emm3.11, method = contrast_list, adjust = "none"))
-contrasts1.12 = data.frame(contrast(emm3.12, method = contrast_list, adjust = "none"))
-contrasts1.13 = data.frame(contrast(emm3.13, method = contrast_list, adjust = "none"))
-contrasts1.14 = data.frame(contrast(emm3.14, method = contrast_list, adjust = "none"))
-contrasts1.15 = data.frame(contrast(emm3.15, method = contrast_list, adjust = "none"))
+contrasts3.1 = data.frame(contrast(emm3.1, method = contrast_list, adjust = "none"))
+contrasts3.2 = data.frame(contrast(emm3.2, method = contrast_list, adjust = "none"))
+contrasts3.3 = data.frame(contrast(emm3.3, method = contrast_list, adjust = "none"))
+contrasts3.4 = data.frame(contrast(emm3.4, method = contrast_list, adjust = "none"))
+contrasts3.5 = data.frame(contrast(emm3.5, method = contrast_list, adjust = "none"))
+contrasts3.6 = data.frame(contrast(emm3.6, method = contrast_list, adjust = "none"))
+contrasts3.7 = data.frame(contrast(emm3.7, method = contrast_list, adjust = "none"))
+contrasts3.8 = data.frame(contrast(emm3.8, method = contrast_list, adjust = "none"))
+contrasts3.9 = data.frame(contrast(emm3.9, method = contrast_list, adjust = "none"))
+contrasts3.10 = data.frame(contrast(emm3.10, method = contrast_list, adjust = "none"))
+contrasts3.11 = data.frame(contrast(emm3.11, method = contrast_list, adjust = "none"))
+contrasts3.12 = data.frame(contrast(emm3.12, method = contrast_list, adjust = "none"))
+contrasts3.13 = data.frame(contrast(emm3.13, method = contrast_list, adjust = "none"))
+contrasts3.14 = data.frame(contrast(emm3.14, method = contrast_list, adjust = "none"))
+contrasts3.15 = data.frame(contrast(emm3.15, method = contrast_list, adjust = "none"))
 
-contrasts1.1$Outcome = v3.1
-contrasts1.2$Outcome = v3.2
-contrasts1.3$Outcome = v3.3
-contrasts1.4$Outcome = v3.4
-contrasts1.5$Outcome = v3.5
-contrasts1.6$Outcome = v3.6
-contrasts1.7$Outcome = v3.7
-contrasts1.8$Outcome = v3.8
-contrasts1.9$Outcome = v3.9
-contrasts1.10$Outcome = v3.10
-contrasts1.11$Outcome = v3.11
-contrasts1.12$Outcome = v3.12
-contrasts1.13$Outcome = v3.13
-contrasts1.14$Outcome = v3.14
-contrasts1.15$Outcome = v3.15
+contrasts3.1$Outcome = v3.1
+contrasts3.2$Outcome = v3.2
+contrasts3.3$Outcome = v3.3
+contrasts3.4$Outcome = v3.4
+contrasts3.5$Outcome = v3.5
+contrasts3.6$Outcome = v3.6
+contrasts3.7$Outcome = v3.7
+contrasts3.8$Outcome = v3.8
+contrasts3.9$Outcome = v3.9
+contrasts3.10$Outcome = v3.10
+contrasts3.11$Outcome = v3.11
+contrasts3.12$Outcome = v3.12
+contrasts3.13$Outcome = v3.13
+contrasts3.14$Outcome = v3.14
+contrasts3.15$Outcome = v3.15
 
-fapcares = rbind(contrasts1.1, contrasts1.2, contrasts1.3, contrasts1.4,
-                  contrasts1.5, contrasts1.6, contrasts1.7, contrasts1.8, contrasts1.9,
-                  contrasts1.10, contrasts1.11, contrasts1.12, contrasts1.13, contrasts1.14, contrasts1.15)
+fapcares = rbind(contrasts3.1, contrasts3.2, contrasts3.3, contrasts3.4,
+                  contrasts3.5, contrasts3.6, contrasts3.7, contrasts3.8, contrasts3.9,
+                  contrasts3.10, contrasts3.11, contrasts3.12, contrasts3.13, contrasts3.14, contrasts3.15)
 fapcares = fapcares %>% arrange(p.value)
 
 fapcares$BH = p.adjust(fapcares$p.value, method = "BH", n = length(fapcares$p.value))
 fapcares$BY = p.adjust(fapcares$p.value, method = "BY", n = length(fapcares$p.value))
 
+fapcares$estimate = ifelse(fapcares$Outcome %in% c(v3.6, v3.7, v3.8), fapcares$estimate * -1, fapcares$estimate * 1)
+
 fapcares$expestimate = exp(fapcares$estimate)
 
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.1)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.2)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.3)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.4)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.5)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.6)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.7)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.8)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.9)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.10)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.11)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.12)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.13)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.14)
-
-fapcares %>% filter(BH < 0.06) %>% filter(Outcome == v3.15)
+fapcares %>% filter(BH < 0.15) 
 
 ```
+
+```{r}
+# Adjustments
+
+AM_3.1 = glmmTMB(O17 ~ FA*Time + Gender*Time + Treatment + (1| ID), data = groupA, family = Gamma(link = "log"))
+v3.1 = paste0(varA[17], " + MVA85A")
+
+AM_3.2 = glmmTMB(O21 ~ FA*Time + Gender*Time + QFT + (1| ID), data = groupA, family = Gamma(link = "log"))
+v3.2 = paste0(varA[21], " + QFT")
+
+AM_3.3 = glmmTMB(O18 ~ FA*Time + Gender*Time + QFT + (1| ID), data = groupA, family = Gamma(link = "log"))
+v3.3 = paste0(varA[18], " + QFT")
+
+AM_3.4 = glmmTMB(O39 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+v3.4 = varA[39]
+
+AM_3.5 = glmmTMB(O25 ~ FA*Time + Gender*Time + Treatment + QFT + (1| ID), data = groupA, family = tweedie(link = "log"))
+v3.5 = paste0(varA[25], " + MVA85A + QFT")
+
+AM_3.6 = glmmTMB(94-O15 ~ FA*Time + Gender*Time + Treatment + (1| ID), data = groupA, family = tweedie(link = "log"))
+v3.6 = paste0(varA[15], " + MVA85A")
+
+
+AM_3.7 = glmmTMB(101 - O19 ~ FA*Time + Gender*Time + Treatment + (1| ID), data = groupA, family = Gamma(link = "log"))
+v3.7 = paste0(varA[19], " + MVA85A")
+
+AM_3.8 = glmmTMB(101 - O36 ~ FA*Time + Gender*Time + Treatment + QFT + (1| ID), data = groupA, family = tweedie(link = "log"))
+v3.8 = paste0(varA[36], " + MVA85A + QFT")
+
+AM_3.9 = glmmTMB(O9 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+v3.9 = varA[9]
+
+AM_3.10 = glmmTMB(O13 ~ FA*Time + Gender*Time + QFT + (1| ID), data = groupA, family = tweedie(link = "log"))
+v3.10 = paste0(varA[13], " + QFT")
+
+AM_3.11 = glmmTMB(O16 ~ FA*Time + Gender*Time + QFT + (1| ID), data = groupA, family = Gamma(link = "log"))
+v3.11 = paste0(varA[16], " + QFT")
+
+AM_3.12 = glmmTMB(O20 ~ FA*Time + Gender*Time + Treatment + (1| ID), data = groupA, family = tweedie(link = "log"))
+v3.12 = paste0(varA[20], " + MVA85A")
+
+AM_3.13 = glmmTMB(O23 ~ FA*Time + Gender*Time + QFT + (1| ID), data = groupA, family = tweedie(link = "log"))
+v3.13 = paste0(varA[23], " + QFT")
+
+AM_3.14 = glmmTMB(O31 ~ FA*Time + Gender*Time + Treatment + QFT + (1| ID), data = groupA, family = tweedie(link = "log"))
+v3.14 = paste0(varA[31], " + MVA85A + QFT")
+
+AM_3.15 = glmmTMB(O27 ~ FA*Time + Gender*Time + Treatment + (1| ID), data = groupA, family = tweedie(link = "log"))
+v3.15 = paste0(varA[27], " + MVA85A")
+
+
+```
+
+Estimate and apply corrections for FA. Only significant differences within group over time.
+```{r}
+
+emm3.1 = emmeans(AM_3.1, ~ FA * Time)
+emm3.2 = emmeans(AM_3.2, ~ FA * Time)
+emm3.3 = emmeans(AM_3.3, ~ FA * Time)
+emm3.4 = emmeans(AM_3.4, ~ FA * Time)
+emm3.5 = emmeans(AM_3.5, ~ FA * Time)
+emm3.6 = emmeans(AM_3.6, ~ FA * Time)
+emm3.7 = emmeans(AM_3.7, ~ FA * Time)
+emm3.8 = emmeans(AM_3.8, ~ FA * Time)
+emm3.9 = emmeans(AM_3.9, ~ FA * Time)
+emm3.10 = emmeans(AM_3.10, ~ FA * Time)
+emm3.11 = emmeans(AM_3.11, ~ FA * Time)
+emm3.12 = emmeans(AM_3.12, ~ FA * Time)
+emm3.13 = emmeans(AM_3.13, ~ FA * Time)
+emm3.14 = emmeans(AM_3.14, ~ FA * Time)
+emm3.15 = emmeans(AM_3.15, ~ FA * Time)
+
+# Apply custom contrasts
+contrasts3.1 = data.frame(contrast(emm3.1, method = contrast_list, adjust = "none"))
+contrasts3.2 = data.frame(contrast(emm3.2, method = contrast_list, adjust = "none"))
+contrasts3.3 = data.frame(contrast(emm3.3, method = contrast_list, adjust = "none"))
+contrasts3.4 = data.frame(contrast(emm3.4, method = contrast_list, adjust = "none"))
+contrasts3.5 = data.frame(contrast(emm3.5, method = contrast_list, adjust = "none"))
+contrasts3.6 = data.frame(contrast(emm3.6, method = contrast_list, adjust = "none"))
+contrasts3.7 = data.frame(contrast(emm3.7, method = contrast_list, adjust = "none"))
+contrasts3.8 = data.frame(contrast(emm3.8, method = contrast_list, adjust = "none"))
+contrasts3.9 = data.frame(contrast(emm3.9, method = contrast_list, adjust = "none"))
+contrasts3.10 = data.frame(contrast(emm3.10, method = contrast_list, adjust = "none"))
+contrasts3.11 = data.frame(contrast(emm3.11, method = contrast_list, adjust = "none"))
+contrasts3.12 = data.frame(contrast(emm3.12, method = contrast_list, adjust = "none"))
+contrasts3.13 = data.frame(contrast(emm3.13, method = contrast_list, adjust = "none"))
+contrasts3.14 = data.frame(contrast(emm3.14, method = contrast_list, adjust = "none"))
+contrasts3.15 = data.frame(contrast(emm3.15, method = contrast_list, adjust = "none"))
+
+contrasts3.1$Outcome = v3.1
+contrasts3.2$Outcome = v3.2
+contrasts3.3$Outcome = v3.3
+contrasts3.4$Outcome = v3.4
+contrasts3.5$Outcome = v3.5
+contrasts3.6$Outcome = v3.6
+contrasts3.7$Outcome = v3.7
+contrasts3.8$Outcome = v3.8
+contrasts3.9$Outcome = v3.9
+contrasts3.10$Outcome = v3.10
+contrasts3.11$Outcome = v3.11
+contrasts3.12$Outcome = v3.12
+contrasts3.13$Outcome = v3.13
+contrasts3.14$Outcome = v3.14
+contrasts3.15$Outcome = v3.15
+
+fapcares = rbind(contrasts3.1, contrasts3.2, contrasts3.3, contrasts3.4,
+                  contrasts3.5, contrasts3.6, contrasts3.7, contrasts3.8, contrasts3.9,
+                  contrasts3.10, contrasts3.11, contrasts3.12, contrasts3.13, contrasts3.14, contrasts3.15)
+fapcares = fapcares %>% arrange(p.value)
+
+fapcares$BH = p.adjust(fapcares$p.value, method = "BH", n = length(fapcares$p.value))
+fapcares$BY = p.adjust(fapcares$p.value, method = "BY", n = length(fapcares$p.value))
+
+fapcares$estimate = ifelse(fapcares$Outcome %in% c(v3.6, v3.7, v3.8), fapcares$estimate * -1, fapcares$estimate * 1)
+
+fapcares$expestimate = exp(fapcares$estimate)
+
+fapcares %>% filter(BH < 0.15) 
+
+```
+
 
 # Group B
 
@@ -1164,9 +1362,9 @@ mvapcaresB$BY = p.adjust(mvapcaresB$p.value, method = "BY", n = length(mvapcares
 
 mvapcaresB$expestimate = exp(mvapcaresB$estimate)
 
-mvapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v1.1)
-mvapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v1.2)
-mvapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v1.3)
+mvapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v1.1)
+mvapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v1.2)
+mvapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v1.3)
 
 ```
 
@@ -1338,12 +1536,12 @@ qftpcaresB$BY = p.adjust(qftpcaresB$p.value, method = "BY", n = length(qftpcares
 
 qftpcaresB$expestimate = exp(qftpcaresB$estimate)
 
-qftpcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v2.1)
-qftpcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v2.2)
-qftpcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v2.3)
-qftpcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v2.4)
-qftpcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v2.5)
-qftpcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v2.6)
+qftpcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v2.1)
+qftpcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v2.2)
+qftpcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v2.3)
+qftpcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v2.4)
+qftpcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v2.5)
+qftpcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v2.6)
 
 ```
 
@@ -1555,12 +1753,12 @@ fapcaresB$BY = p.adjust(fapcaresB$p.value, method = "BY", n = length(fapcaresB$p
 
 fapcaresB$expestimate = exp(fapcaresB$estimate)
 
-fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.1)
-fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.2)
-fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.3)
-fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.4)
-fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.5)
-fapcaresB %>% filter(BH < 0.06) %>% filter(Outcome == v3.6)
+fapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v3.1)
+fapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v3.2)
+fapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v3.3)
+fapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v3.4)
+fapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v3.5)
+fapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v3.6)
 
 
 ```
@@ -1589,7 +1787,7 @@ Amelt = melt(Aset_res)
 colnames(Amelt) = c("Outcome", "Variable", "Indicator")
 Amelt$Indicator = as.logical(Amelt$Indicator)
 
-ggplot(Amelt, aes(x = Variable, y = Outcome, fill = Indicator)) +
+ggplot(Amelt, aes(x = Variable, y = reorder(Outcome, Indicator), fill = Indicator)) +
   geom_tile(color = "black") + theme_bw() +
   theme(axis.text.y = element_text(size=9, family = "TT Arial"),
         axis.text.x = element_text(size=10, angle = 0, family = "TT Arial", face = "bold"),
@@ -1601,7 +1799,7 @@ scale_fill_manual(name = "Selected", breaks = c("FALSE", "TRUE"), values = c("li
 
 ```{r}
 
-# Group A set comparison
+# Group B set comparison
 
 Bset_list = list(MVA85A = mva_pca_setB, QFT = qft_pca_setB, FA = fa_pca_setB)
 
@@ -1623,7 +1821,7 @@ Bmelt = melt(Bset_res)
 colnames(Bmelt) = c("Outcome", "Variable", "Indicator")
 Bmelt$Indicator = as.logical(Bmelt$Indicator)
 
-ggplot(Bmelt, aes(x = Variable, y = Outcome, fill = Indicator)) +
+ggplot(Bmelt, aes(x = Variable, y = reorder(Outcome, Indicator), fill = Indicator)) +
   geom_tile(color = "black") + theme_bw() +
   theme(axis.text.y = element_text(size=9, family = "TT Arial"),
         axis.text.x = element_text(size=10, angle = 0, family = "TT Arial", face = "bold"),
@@ -1637,21 +1835,68 @@ scale_fill_manual(name = "Selected", breaks = c("FALSE", "TRUE"), values = c("li
 Apply PCA to standardised regression coefficients for sex and interactions between sex and time points. In Group A, the first PC explains sufficient variance in the standardised regression coefficients. 
 
 ```{r}
-
 mat4.2A = tmelt_4A[, c("Outcome", "Group", "Coefficient", "value")]
+mat4.2A$OutcomeGroup = paste(mat4.2A$Outcome, mat4.2A$Group)
+
+mat4.2B = tmelt_4B[, c("Outcome", "Group", "Coefficient", "value")]
+mat4.2B$OutcomeGroup = paste(mat4.2B$Outcome, mat4.2B$Group)
 
 # Restructure the data frame
 
-mat4.2A$OutcomeGroup = paste(mat4.2A$Outcome, mat4.2A$Group)
-mat4.2A2 = mat4.2A[, c("OutcomeGroup", "Coefficient", "value")]
+mat4.2A_mva = mat4.2A %>% filter(Group == "MVA85A")
+mat4.2A_qft = mat4.2A %>% filter(Group == "QFT")
+mat4.2A_fa = mat4.2A %>% filter(Group %in% c("FA - FA", "FA - BA"))
 
-mat4.2A2_wide = mat4.2A2 %>%
+mat4.2B_mva = mat4.2B %>% filter(Group == "MVA85A")
+mat4.2B_qft = mat4.2B %>% filter(Group == "QFT")
+mat4.2B_fa = mat4.2B %>% filter(Group %in% c("FA - FA", "FA - BA"))
+
+# MVA85A data preparation
+
+mat4.2A_mva_wide = mat4.2A_mva %>%
   pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
 
-mat4.2A2 = as.matrix(mat4.2A2_wide[, 2:4], nrow = nrow(mat4.2A2_wide), ncol = 3)
-row.names(mat4.2A2) = mat4.2A2_wide$OutcomeGroup
+mat4.2A2_mva = as.matrix(mat4.2A_mva_wide[, 2:4], nrow = nrow(mat4.2A_mva_wide), ncol = 3)
+row.names(mat4.2A2_mva) = mat4.2A_mva_wide$OutcomeGroup
 
-pca4.2Ares = princomp(mat4.2A2, cor = TRUE, scores = TRUE)
+mat4.2B_mva_wide = mat4.2B_mva %>%
+  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
+
+mat4.2B2_mva = as.matrix(mat4.2B_mva_wide[, 2:3], nrow = nrow(mat4.2B_mva_wide), ncol = 2)
+row.names(mat4.2B2_mva) = mat4.2B_mva_wide$OutcomeGroup
+
+# QFT data preparation
+
+mat4.2A_qft_wide = mat4.2A_qft %>%
+  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
+
+mat4.2A2_qft = as.matrix(mat4.2A_qft_wide[, 2:4], nrow = nrow(mat4.2A_qft_wide), ncol = 3)
+row.names(mat4.2A2_qft) = mat4.2A_qft_wide$OutcomeGroup
+
+mat4.2B_qft_wide = mat4.2B_qft %>%
+  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
+
+mat4.2B2_qft = as.matrix(mat4.2B_qft_wide[, 2:3], nrow = nrow(mat4.2B_qft_wide), ncol = 2)
+row.names(mat4.2B2_qft) = mat4.2B_qft_wide$OutcomeGroup
+
+# FA data preparation
+
+mat4.2A_fa_wide = mat4.2A_fa %>%
+  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
+
+mat4.2A2_fa = as.matrix(mat4.2A_fa_wide[, 2:4], nrow = nrow(mat4.2A_fa_wide), ncol = 3)
+row.names(mat4.2A2_fa) = mat4.2A_fa_wide$OutcomeGroup
+
+mat4.2B_fa_wide = mat4.2B_fa %>%
+  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
+
+mat4.2B2_fa = as.matrix(mat4.2B_fa_wide[, 2:3], nrow = nrow(mat4.2B_fa_wide), ncol = 2)
+row.names(mat4.2B2_fa) = mat4.2B_fa_wide$OutcomeGroup
+```
+
+
+```{r}
+pca4.2Ares = princomp(mat4.2A2_mva, cor = TRUE, scores = TRUE)
 summary(pca4.2Ares) # Component 1 should suffice
 
 fviz_eig(pca4.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
@@ -1677,33 +1922,118 @@ fviz_contrib(pca4.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "b
         axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
         axis.text.y = element_text(size = 10))
 
-
-```
-
-PC1 has many contributions as the coefficients are measured for each VOI.
-
-```{r}
-
-fviz_contrib(pca4.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
+fviz_contrib(pca4.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 20) +
   labs(y = element_text("Contributions(%)\n")) +
   theme_minimal() +
   theme(title = element_blank(),
         axis.title.y = element_text(size = 12, face = "bold"),
         axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
         axis.text.y = element_text(size = 10))
 
+
+```
+
+
+```{r}
+contrib4.2A = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+
+pc1dat = contrib4.2A$data[which(contrib4.2A$data$contrib >= 5), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_mva_setA = pcnames1
+```
+```{r}
+pca4.2Ares = princomp(mat4.2A2_qft, cor = TRUE, scores = TRUE)
+summary(pca4.2Ares) # Component 1 should suffice
+
+fviz_eig(pca4.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+```{r}
+fviz_contrib(pca4.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 20) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
 ```
 
 ```{r}
 contrib4.2A = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
 
-pc1dat = contrib4.2A$data[which(contrib4.2A$data$contrib >= 0.76), ]
+pc1dat = contrib4.2A$data[which(contrib4.2A$data$contrib >= 3), ]
 
 pcnames1 = as.character(unique(c(pc1dat$name)))
 
-sex_pca_setA = pcnames1
+sex_qft_setA = pcnames1
+```
 
+
+```{r}
+pca4.2Ares = princomp(mat4.2A2_fa, cor = TRUE, scores = TRUE)
+summary(pca4.2Ares) # Component 1 should suffice
+
+fviz_eig(pca4.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
+         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
+         ylim = c(0, 100)) + theme_minimal() +
+theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
+                                   axis.text.x = element_text(size = 10, family = "Arial"),
+                                   axis.text.y = element_text(size = 10, family = "Arial"))
+
+```
+
+```{r}
+fviz_contrib(pca4.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+fviz_contrib(pca4.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 30) +
+  labs(y = element_text("Contributions(%)\n")) +
+  theme_minimal() +
+  theme(title = element_blank(),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, angle = 90, vjust = 0, hjust = 1),
+        axis.text.y = element_text(size = 10))
+```
+
+```{r}
+contrib4.2A = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
+
+pc1dat = contrib4.2A$data[which(contrib4.2A$data$contrib >= 1.5), ]
+
+pcnames1 = as.character(unique(c(pc1dat$name)))
+
+sex_fa_setA = pcnames1
+```
+
+```{r}
 split_after_match = function(string, matches) {
   # Create a regex pattern that matches any word in 'matches'
   pattern <- paste(matches, collapse = "|")
@@ -1727,13 +2057,13 @@ sex_df = as.data.frame(result, stringsAsFactors = FALSE)
 # View the result
 print(sex_df)
 
-mva_sex_namesA = unlist(as.vector(sex_df %>% filter(Group == "MVA85A") %>% select(Outcome)))
-qft_sex_namesA = unlist(as.vector(sex_df %>% filter(Group == "QFT") %>% select(Outcome)))
-fa_sex_namesA = unique(unlist(as.vector(sex_df %>% filter(Group %in% c("FA - FA", "FA - BA")) %>% select(Outcome))))
+mva_sex_namesA = (sex_df %>% filter(Group == "MVA85A"))
+qft_sex_namesA = sex_df %>% filter(Group == "QFT")
+fa_sex_namesA = unique((sex_df %>% filter(Group %in% c("FA - FA", "FA - BA"))))
 
 # For all VOI
 all_sex_namesA = Reduce(intersect, list(mva_sex_namesA, qft_sex_namesA, fa_sex_namesA))
-
+str(sex_df)
 find_exclusive_pairs = function(vec1, vec2, exclude_vec) {
   # Find common elements in vec1 and vec2
   common <- intersect(vec1, vec2)
@@ -1743,15 +2073,15 @@ find_exclusive_pairs = function(vec1, vec2, exclude_vec) {
 
 # For MVA85A and QFT but not FA
 
-mva_qft_namesA = find_exclusive_pairs(mva_sex_namesA, qft_sex_namesA, fa_sex_namesA)
+mva_qft_namesA = find_exclusive_pairs(mva_sex_namesA$Outcome, qft_sex_namesA$Outcome, fa_sex_namesA$Outcome)
 
 # For MVA85A and FA but not QFT
 
-mva_fa_namesA = find_exclusive_pairs(mva_sex_namesA, fa_sex_namesA, qft_sex_namesA)
+mva_fa_namesA = find_exclusive_pairs(mva_sex_namesA$Outcome, fa_sex_namesA$Outcome, qft_sex_namesA$Outcome)
 
 # For QFT and FA but not MVA85A
 
-qft_fa_namesA = find_exclusive_pairs(qft_sex_namesA, fa_sex_namesA, fa_sex_namesA)
+qft_fa_namesA = find_exclusive_pairs(qft_sex_namesA$Outcome, fa_sex_namesA$Outcome, fa_sex_namesA$Outcome)
 
 find_exclusive = function(target_vec, exclude_vec1, exclude_vec2) {
   # Combine the two exclusion vectors
@@ -1762,15 +2092,82 @@ find_exclusive = function(target_vec, exclude_vec1, exclude_vec2) {
 
 # For MVA85A only
 
-mva_namesA = find_exclusive(mva_sex_namesA, qft_sex_namesA, fa_sex_namesA)
+mva_namesA = find_exclusive(mva_sex_namesA$Outcome, qft_sex_namesA$Outcome, fa_sex_namesA$Outcome)
 
 # For QFT only
 
-qft_namesA = find_exclusive(qft_sex_namesA, mva_sex_namesA, fa_sex_namesA)
+qft_namesA = find_exclusive(qft_sex_namesA$Outcome, mva_sex_namesA$Outcome, fa_sex_namesA$Outcome)
 
 # For FA only
 
-fa_namesA = find_exclusive(fa_sex_namesA, mva_sex_namesA, qft_sex_namesA)
+fa_namesA = find_exclusive(fa_sex_namesA$Outcome, mva_sex_namesA$Outcome, qft_sex_namesA$Outcome)
+
+```
+
+```{r}
+
+# Group A set comparison
+
+Aset_list = list(MVA85A = mva_sex_namesA$Outcome, QFT = qft_sex_namesA$Outcome, FA = fa_sex_namesA$Outcome)
+
+# Number per set
+
+length(mva_sex_namesA$Outcome)
+length(qft_sex_namesA$Outcome)
+length(fa_sex_namesA$Outcome)
+
+# Number of unique immune outcomes
+unique(c(mva_sex_namesA$Outcome, qft_sex_namesA$Outcome, fa_sex_namesA$Outcome))
+
+Aresult = sapply(allA, function(x) {
+  sapply(Aset_list, function(vec) as.numeric(x %in% vec))
+})
+
+Aset_res = t(Aresult)
+Amelt = melt(Aset_res)
+colnames(Amelt) = c("Outcome", "Variable", "Indicator")
+Amelt$Indicator = as.logical(Amelt$Indicator)
+
+ggplot(Amelt, aes(x = Variable, y = Outcome, fill = Indicator)) +
+  geom_tile(color = "black") + theme_bw() +
+  theme(axis.text.y = element_text(size=9, family = "TT Arial"),
+        axis.text.x = element_text(size=10, angle = 0, family = "TT Arial", face = "bold"),
+        axis.title.y = element_blank(), axis.title.x = element_blank(), legend.position = "none") +
+scale_fill_manual(name = "Selected", breaks = c("FALSE", "TRUE"), values = c("lightgrey", "darkcyan"))
+
+
+```
+```{r}
+
+# Group B set comparison
+
+Bset_list = list(MVA85A = mva_sex_namesB$Outcome, QFT = qft_sex_namesB$Outcome, FA = fa_sex_namesB$Outcome)
+
+# Number per set
+
+length(mva_sex_namesB$Outcome)
+length(qft_sex_namesB$Outcome)
+length(fa_sex_namesB$Outcome)
+
+# Number of unique immune outcomes
+unique(c(mva_sex_namesA$Outcome, qft_sex_namesA$Outcome, fa_sex_namesA$Outcome))
+
+Aresult = sapply(allA, function(x) {
+  sapply(Aset_list, function(vec) as.numeric(x %in% vec))
+})
+
+Aset_res = t(Aresult)
+Amelt = melt(Aset_res)
+colnames(Amelt) = c("Outcome", "Variable", "Indicator")
+Amelt$Indicator = as.logical(Amelt$Indicator)
+
+ggplot(Amelt, aes(x = Variable, y = Outcome, fill = Indicator)) +
+  geom_tile(color = "black") + theme_bw() +
+  theme(axis.text.y = element_text(size=9, family = "TT Arial"),
+        axis.text.x = element_text(size=10, angle = 0, family = "TT Arial", face = "bold"),
+        axis.title.y = element_blank(), axis.title.x = element_blank(), legend.position = "none") +
+scale_fill_manual(name = "Selected", breaks = c("FALSE", "TRUE"), values = c("lightgrey", "darkcyan"))
+
 
 ```
 
@@ -1837,35 +2234,35 @@ sex_dfB = as.data.frame(result, stringsAsFactors = FALSE)
 # View the result
 print(sex_dfB)
 
-mva_sex_namesB = unlist(as.vector(sex_dfB %>% filter(Group == "MVA85A") %>% select(Outcome)))
-qft_sex_namesB = unlist(as.vector(sex_dfB %>% filter(Group == "QFT") %>% select(Outcome)))
-fa_sex_namesB = unique(unlist(as.vector(sex_dfB %>% filter(Group %in% c("FA - FA", "FA - BA")) %>% select(Outcome))))
+mva_sex_namesB = sex_dfB %>% filter(Group == "MVA85A")
+qft_sex_namesB = sex_dfB %>% filter(Group == "QFT") 
+fa_sex_namesB = sex_dfB %>% filter(Group %in% c("FA - FA", "FA - BA"))
 
 # For all VOI
 all_sex_namesB = Reduce(intersect, list(mva_sex_namesB, qft_sex_namesB, fa_sex_namesB))
 
 # For MVA85A and QFT but not FA
 
-mva_qft_namesB = find_exclusive_pairs(mva_sex_namesB, qft_sex_namesB, fa_sex_namesB)
+mva_qft_namesB = find_exclusive_pairs(mva_sex_namesB$Outcome, qft_sex_namesB$Outcome, fa_sex_namesB$Outcome)
 
 # For MVA85A and FA but not QFT
 
-mva_fa_namesB = find_exclusive_pairs(mva_sex_namesB, fa_sex_namesB, qft_sex_namesB)
+mva_fa_namesB = find_exclusive_pairs(mva_sex_namesB$Outcome, fa_sex_namesB$Outcome, qft_sex_namesB$Outcome)
 
 # For QFT and FA but not MVA85A
 
-qft_fa_namesB = find_exclusive_pairs(qft_sex_namesB, fa_sex_namesB, fa_sex_namesB)
+qft_fa_namesB = find_exclusive_pairs(qft_sex_namesB$Outcome, fa_sex_namesB$Outcome, fa_sex_namesB$Outcome)
 
 # For MVA85A only
 
-mva_namesB = find_exclusive(mva_sex_namesB, qft_sex_namesB, fa_sex_namesB)
+mva_namesB = find_exclusive(mva_sex_namesB$Outcome, qft_sex_namesB$Outcome, fa_sex_namesB$Outcome)
 
 # For QFT only
 
-qft_namesB = find_exclusive(qft_sex_namesB, mva_sex_namesB, fa_sex_namesB)
+qft_namesB = find_exclusive(qft_sex_namesB$Outcome, mva_sex_namesB$Outcome, fa_sex_namesB$Outcome)
 
 # For FA only
 
-fa_namesB = find_exclusive(fa_sex_namesB, mva_sex_namesB, qft_sex_namesB)
+fa_namesB = find_exclusive(fa_sex_namesB$Outcome, mva_sex_namesB$Outcome, qft_sex_namesB$Outcome)
 
 ```
