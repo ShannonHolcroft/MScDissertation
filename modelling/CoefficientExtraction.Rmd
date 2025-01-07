@@ -145,9 +145,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-10, 1], "UpperCI" = plc2[-10, 2])
 
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
 
@@ -159,9 +156,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-16, 1], "UpperCI" = plc3[-16, 2])
-
-#c3 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 = c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -183,20 +177,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam = AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[1, ]
-
 
 ```
 
@@ -208,7 +188,7 @@ k = 3
 
 # Fit models
 
-AM_0 = glmmTMB(O3 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AM_0 = glmmTMB(O3 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"), na.action = na.omit)
 AS_0 = summary(AM_0)
 
 fc1 = data.frame(AS_0$coefficients$cond)
@@ -217,10 +197,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-###p1 = unname(family_params(AM_0)[1])
 
 AM_0 = glmmTMB(O3 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_0 = summary(AM_0)
@@ -230,11 +206,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -248,11 +219,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
 
-#c3 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 = c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
-
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
 
@@ -265,31 +231,11 @@ fc4 = cbind("Outcome" = l, "Group" = "FA - BA", "Coefficient" = row.names(AS_0$c
 plc4 = confint(AM_0, method = "wald", component = "cond")
 fc4 = cbind(fc4, "LowerCI" = plc4[-c(16,17), 1], "UpperCI" = plc4[-c(16,17), 2])
 
-#c4 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 = c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
 # Put all results together
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam = AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O = c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
-
-##p_ave = (p1+p2+p3+p4)/4
 
 ```
 
@@ -312,12 +258,6 @@ plc1 = sort_row_values(plc1)
 
 fc1 = cbind(fc1, "LowerCI" = plc1[, 1], "UpperCI" = plc1[, 2])
 
-
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-###p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O4 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -330,10 +270,6 @@ plc2 = data.frame("LowerCI" = fc2$Estimate - 1.96*fc2$Std..Error, "UpperCI" = fc
 plc2 = sort_row_values(plc2)
 
 fc2 = cbind(fc2, "LowerCI" = plc2[, 1], "UpperCI" = plc2[, 2])
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -348,10 +284,6 @@ plc3 = data.frame("LowerCI" = fc3$Estimate - 1.96*fc3$Std..Error, "UpperCI" = fc
 plc3 = sort_row_values(plc3)
 
 fc3 = cbind(fc3, "LowerCI" = plc3[, 1], "UpperCI" = plc3[, 2])
-#c3 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 = c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -366,8 +298,6 @@ plc4 = data.frame("LowerCI" = fc4$Estimate - 1.96*fc4$Std..Error, "UpperCI" = fc
 plc4 = sort_row_values(plc4)
 
 fc4 = cbind(fc4, "LowerCI" = plc4[, 1], "UpperCI" = plc4[, 2])
-#c4 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 = c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
 
 ##p4 = unname(family_params(AM_0)[1])
 
@@ -376,24 +306,10 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam = AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O = c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
-
-#p_ave = (p1+p2+p3+p4)/4
-
 ```
+
 **%CD4+ totIL17+:** 
+
 ```{r Outcome5, include=TRUE}
 l = varA[5]
 k = 5
@@ -407,11 +323,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-###p1 = unname(family_params(AM_0)[1])
-
 AM_0 = glmmTMB(O5 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -420,11 +331,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p2 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -438,19 +344,11 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
 
-#c3 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 = c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-##p3 = unname(family_params(AM_0)[1])
-
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
 
 AM_0 = glmmTMB(O5 ~ FA*Time + Gender*Time + (1| ID), data = groupAre1, family = tweedie(link = "log"))
 AS_0 = summary(AM_0)
-
-#c4 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 = c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
 
 fc4 = data.frame(AS_0$coefficients$cond)
 fc4 = cbind("Outcome" = l, "Group" = "FA - BA", "Coefficient" = row.names(AS_0$coefficients$cond), fc4)
@@ -462,24 +360,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[-c(16,17), 1], "UpperCI" = plc4[-c(16,17), 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-##p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam = AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O = c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 
 ```
 **%CD4+ totIL22+**: 
@@ -498,9 +378,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-10, 1], "UpperCI" = plc1[-10, 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
 # Plot
 
 AM_0 = glmmTMB(O6 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
@@ -511,10 +388,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-10, 1], "UpperCI" = plc2[-10, 2])
-
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -527,9 +400,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-16, 1], "UpperCI" = plc3[-16, 2])
-
-#c3 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 = c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -548,22 +418,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 = c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam = AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O = c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **%CD4+ totTNF+:** 
@@ -583,9 +437,6 @@ plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-10, 1], "UpperCI" = plc1[-10, 2])
 
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
 # Plot
 
 AM_0 = glmmTMB(O7 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
@@ -596,10 +447,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-10, 1], "UpperCI" = plc2[-10, 2])
-
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -613,8 +460,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-16, 1], "UpperCI" = plc3[-16, 2])
 
-#c3 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 = c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -633,22 +478,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 = c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam = AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O = c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **%CD8+ any:**
@@ -668,10 +497,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-####p1 = unname(family_params(AM_0)[1])
 
 # Plot
 
@@ -684,11 +509,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
 
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p2 = unname(family_params(AM_0)[1])
-
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
 
@@ -700,11 +520,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 = c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-##p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -723,26 +538,7 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 = c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
 
-###p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam = AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O = c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **%CD8+ totIFng+:** 
@@ -762,11 +558,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O9 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -778,10 +569,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
 
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p2 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -794,11 +581,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 = c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -817,26 +599,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 = unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 = c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-###p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 ```{r Outcome10, include=TRUE}
@@ -853,11 +615,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O10 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -868,11 +625,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -885,11 +637,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -908,26 +655,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 
@@ -946,11 +673,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O11 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -961,11 +683,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -978,11 +695,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -1001,26 +713,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **%CD8+ totIL22+:** 
@@ -1038,10 +730,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
 
 AM_0 = glmmTMB(O12 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_0 = summary(AM_0)
@@ -1051,11 +739,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -1068,11 +751,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -1091,27 +769,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **%CD8+ totTNF+:** 
@@ -1129,11 +786,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O13 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -1144,11 +796,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -1161,11 +808,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -1184,28 +826,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave =  (p1+p2+p3+p4)/4
-
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
-
 ```
 
 **Bulk CD4+/% R7-RA+:** 
@@ -1223,10 +843,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-10, 1], "UpperCI" = plc1[-10, 2])
 
-
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
 # Plot
 
 AM_0 = glmmTMB(O14 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
@@ -1237,9 +853,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-10, 1], "UpperCI" = plc2[-10, 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -1252,9 +865,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-16, 1], "UpperCI" = plc3[-16, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -1273,24 +883,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0("BulkCD4R7nRAp_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
-
-
 ```
 
 **Bulk CD4+/% R7+RA+:** 
@@ -1308,15 +900,14 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(94-O15 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_0 = summary(AM_0)
+
+AM_0 = glmmTMB(94-O15 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = gaussian(link = "identity"))
+AS_0 = summary(AM_0)
+
 
 fc2 = data.frame(AS_0$coefficients$cond)
 fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coefficients$cond), fc2)
@@ -1324,10 +915,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
 
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -1340,11 +927,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -1363,26 +945,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = TRUE)
 write_excel_csv(OR, file = "BulkCD4R7pRAp_Results.csv")
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave =  (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "Left skew corrected"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 **Bulk CD4+/% R7+RA-:** 
 ```{r Outcome16, include=TRUE}
@@ -1398,10 +960,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-10, 1], "UpperCI" = plc1[-10, 2])
 
-
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
 # Plot
 
 AM_0 = glmmTMB(O16 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
@@ -1412,9 +970,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-10, 1], "UpperCI" = plc2[-10, 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -1427,9 +982,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-16, 1], "UpperCI" = plc3[-16, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -1448,22 +1000,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = "BulkCD4R7pRAn_Results.csv")
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-##resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **Bulk CD4+/% R7-RA-:** 
@@ -1481,9 +1017,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-10, 1], "UpperCI" = plc1[-10, 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
 # Plot
 
 AM_0 = glmmTMB(O17 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
@@ -1494,10 +1027,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-10, 1], "UpperCI" = plc2[-10, 2])
-
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -1510,9 +1039,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-16, 1], "UpperCI" = plc3[-16, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -1531,23 +1057,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = "BulkCD4R7nRAn_Results.csv")
 
-
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **Bulk CD8+/% R7-RA+**: 
@@ -1567,10 +1076,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-10, 1], "UpperCI" = plc1[-10, 2])
 
-
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
 # Plot
 
 AM_0 = glmmTMB(O18 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
@@ -1581,9 +1086,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-10, 1], "UpperCI" = plc2[-10, 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -1596,9 +1098,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-16, 1], "UpperCI" = plc3[-16, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -1617,22 +1116,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0("BulkCD8R7nRAp_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 
@@ -1651,13 +1134,9 @@ AS_0 = summary(AM_0)
 
 fc1 = data.frame(AS_0$coefficients$cond)
 fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$coefficients$cond), fc1)
-#fc1 = cbind("Outcome" = paste0("101-",l), "Group" = "MVA85A", "Coefficient" = row.names(AS_0$coefficients$cond), fc1)
 
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-10, 1], "UpperCI" = plc1[-10, 2])
-
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
 
 # Plot
 
@@ -1672,51 +1151,23 @@ plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-10, 1], "UpperCI" = plc2[-10, 2])
 
 
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
 
 AM_0 = glmmTMB(101 - O19 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
 AS_0 = summary(AM_0)
 
-AM_0x = glmmTMB(101 - O19 ~ FA*Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
-AS_0x = summary(AM_0x)
-
-library(emmeans)
-
-emmeans::emmeans(AM_0x, specs = c("FA", "Gender"))
-emmeans::emmeans(AM_0x, pairwise ~ FA * Gender * Time, adjust = "none")
-
-emmip(AM_0x, FA ~ Time | Gender)
-
-emmeans::emmeans(AM_0x, pairwise ~ FA * Gender | Time, adjust = "none")
-
-
-?emmeans
-
-AM_0x = glmmTMB(101 - O19 ~ FA*Time + Gender*Time + Treatment + (1| ID), data = groupA, family = Gamma(link = "log"))
-AS_0x = summary(AM_0x)
-
 fc3 = data.frame(AS_0$coefficients$cond)
-#fc3 = cbind("Outcome" = paste0("101-",l), "Group" = "FA - FA", "Coefficient" = row.names(AS_0$coefficients$cond), fc3)
 fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$coefficients$cond), fc3)
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-16, 1], "UpperCI" = plc3[-16, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
 
 AM_0 = glmmTMB(101 - O19 ~ FA*Time + Gender*Time + (1| ID), data = groupAre1, family = Gamma(link = "log"))
 AS_0 = summary(AM_0)
-
-AM_0x = glmmTMB(101 - O19 ~ FA*Gender*Time + (1| ID), data = groupAre1, family = Gamma(link = "log"))
-AS_0x = summary(AM_0x)
 
 fc4 = data.frame(AS_0$coefficients$cond)
 fc4 = cbind("Outcome" = l, "Group" = "FA - BA", "Coefficient" = row.names(AS_0$coefficients$cond), fc4)
@@ -1728,24 +1179,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[-16, 1], "UpperCI" = plc4[-16, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = TRUE)
 write_excel_csv(OR, file = paste0("BulkCD8R7pRAp_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "Left skew corrected"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
-
 
 ```
 **Bulk CD8+/% R7+RA-:** 
@@ -1764,11 +1197,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-###p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O20 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -1779,11 +1207,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -1796,11 +1219,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -1819,26 +1237,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0("BulkCD8R7pRAn_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 **Bulk CD8+/% R7-RA-:** 
 ```{r Outcome21, include=TRUE}
@@ -1856,10 +1254,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-10, 1], "UpperCI" = plc1[-10, 2])
 
-
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
 # Plot
 
 AM_0 = glmmTMB(O21 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
@@ -1872,32 +1266,17 @@ plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-10, 1], "UpperCI" = plc2[-10, 2])
 
 
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
 
 AM_0 = glmmTMB(O21 ~ FA*Time + Gender*Time + (1| ID), data = groupA, family = Gamma(link = "log"))
 AS_0 = summary(AM_0)
 
-#AM_0x = glmmTMB(O21 ~ FA*Time + Gender*Time + Treatment + (1| ID), data = groupA, family = Gamma(link = "log"))
-#AS_0x = summary(AM_0x)
-
-#AM_0xx = glmmTMB(O21 ~ FA*Time + Gender*Time + QFT + (1| ID), data = groupA, family = Gamma(link = "log"))
-#AS_0xx = summary(AM_0xx)
-
-#AM_0xxx = glmmTMB(O21 ~ FA*Time + Gender*Time + Treatment + QFT + (1| ID), data = groupA, family = Gamma(link = "log"))
-#AS_0xxx = summary(AM_0xxx)
-
 fc3 = data.frame(AS_0$coefficients$cond)
 fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$coefficients$cond), fc3)
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-16, 1], "UpperCI" = plc3[-16, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -1915,23 +1294,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[-16, 1], "UpperCI" = plc4[-16, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0("BulkCD8R7nRAn_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 
 ```
 
@@ -1952,26 +1314,16 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
 # Plot
 
 AM_0 = glmmTMB(O22 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_0 = summary(AM_0)
-
-###p1 = unname(family_params(AM_0)[1])
 
 fc2 = data.frame(AS_0$coefficients$cond)
 fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coefficients$cond), fc2)
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -1984,11 +1336,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -2006,27 +1353,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[-c(16,17), 1], "UpperCI" = plc4[-c(16,17), 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 
 ```
 
@@ -2047,11 +1373,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-###p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O23 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -2062,14 +1383,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-AM_0X = glmmTMB(O23 ~ QFT*Time + Gender*Time + Treatment + (1| ID), data = groupA, family = tweedie(link = "log"))
-AS_0X = summary(AM_0X)
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -2082,11 +1395,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -2105,29 +1413,7 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
-
-
 
 **Gd %Ki67+:** 
 
@@ -2146,11 +1432,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-###p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O24 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -2161,11 +1442,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -2178,11 +1454,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -2200,27 +1471,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[-c(16,17), 1], "UpperCI" = plc4[-c(16,17), 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 
 ```
 
@@ -2241,11 +1491,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-###p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O25 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -2256,11 +1501,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -2273,11 +1513,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -2295,27 +1530,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[-c(16,17), 1], "UpperCI" = plc4[-c(16,17), 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 
 ```
 
@@ -2335,9 +1549,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10), 1], "UpperCI" = plc1[-c(10), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
 # Plot
 
 AM_0 = glmmTMB(O26 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = nbinom1(link = "log"))
@@ -2348,9 +1559,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10), 1], "UpperCI" = plc2[-c(10), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -2363,9 +1571,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16), 1], "UpperCI" = plc3[-c(16), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -2384,22 +1589,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **GrB+ %of Ki67+CD4:** 
@@ -2418,11 +1607,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-###p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O27 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -2433,11 +1617,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -2450,11 +1629,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -2473,26 +1647,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **GrK+ %of Ki67+CD4:** 
@@ -2512,11 +1666,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O29 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -2527,11 +1676,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -2544,11 +1688,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -2567,26 +1706,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **Perf+ %of Ki67+CD4:** 
@@ -2605,11 +1724,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O30 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -2620,11 +1734,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -2637,11 +1746,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -2660,26 +1764,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **GrA+ %of Ki67+ gd:** 
@@ -2700,12 +1784,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10), 1], "UpperCI" = plc1[-c(10), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
-
 AM_0 = glmmTMB(O31 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -2714,11 +1792,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -2731,11 +1804,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -2754,26 +1822,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p2+p3+p4)/3
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **GrB+ %of Ki67+ GD:** 
@@ -2793,11 +1841,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O32 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -2808,11 +1851,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -2825,11 +1863,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -2848,26 +1881,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **GrK+ %of Ki67+ gd:**  
@@ -2887,11 +1900,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O34 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -2902,11 +1910,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -2919,11 +1922,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -2942,26 +1940,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **Perf+ %of Ki67+ gd:**  
@@ -2982,11 +1960,6 @@ plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O35 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -2997,11 +1970,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -3014,11 +1982,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -3037,26 +2000,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **GrA+ %of Ki67+ NK:** 
@@ -3066,7 +2009,7 @@ k = 36
 
 # Fit models
 
-AM_0 = glmmTMB(101 - O36 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
+AM_0 = glmmTMB(101 - O36 ~ Treatment*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"), na.action = na.exclude)
 AS_0 = summary(AM_0)
 
 fc1 = data.frame(AS_0$coefficients$cond)
@@ -3074,11 +2017,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
-
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
 
 AM_0 = glmmTMB(101 - O36 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
 AS_0 = summary(AM_0)
@@ -3088,11 +2026,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -3105,11 +2038,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -3128,26 +2056,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = TRUE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "Left skew corrected"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **GrB+ %of Ki67+ NK:** 
@@ -3167,11 +2075,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(101 - O37 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -3182,11 +2085,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -3199,11 +2097,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -3222,26 +2115,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = TRUE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "Left skew corrected"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 **GrK+ %of Ki67+ NK:** 
@@ -3261,12 +2134,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-c(10,11), 1], "UpperCI" = plc1[-c(10,11), 2])
 
-
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(O39 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -3277,11 +2144,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-c(10,11), 1], "UpperCI" = plc2[-c(10,11), 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -3294,11 +2156,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-c(16,17), 1], "UpperCI" = plc3[-c(16, 17), 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -3316,27 +2173,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[-c(16,17), 1], "UpperCI" = plc4[-c(16,17), 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 
 ```
 
@@ -3357,11 +2193,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-10, 1], "UpperCI" = plc1[-10, 2])
 
-#c1 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c1 = c(c1[1, ], c1[2, ])
-
-##p1 = unname(family_params(AM_0)[1])
-
 # Plot
 
 AM_0 = glmmTMB(100 - O40 ~ QFT*Time + Gender*Time + (1| ID), data = groupA, family = tweedie(link = "log"))
@@ -3372,11 +2203,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-10, 1], "UpperCI" = plc2[-10, 2])
-
-#c2 = unname(AS_0$coefficients$cond[6:7, -c(3, 4)])
-#c2 = c(c2[1, ], c2[2, ])
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -3389,11 +2215,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-16, 1], "UpperCI" = plc3[-16, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c3 =  c(c3[1, ], c3[3, ], c3[4, ], c3[6, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -3412,30 +2233,10 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "A", "Reflected" = TRUE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-#c4 =  unname(AS_0$coefficients$cond[8:13, -c(3, 4)])
-#c4 =  c(c4[1, ], c4[3, ], c4[4, ], c4[6, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "Left skew corrected"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-#resA[k,2:28] = O
-
-#resA[k, ]
 ```
 
 ```{r writedat, include =FALSE}
-#write_excel_csv(resA, file = "GroupAResults.csv")
+write_excel_csv(resA, file = "GroupAResults.csv")
 ```
 
 **Baby Anti-BCG IgG (AUC)**:
@@ -3456,9 +2257,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-7, 1], "UpperCI" = plc1[-7, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
-
 AM_0 = glmmTMB(O4 ~ QFT*Time + Gender*Time + (1| ID), data = groupB1, family = Gamma(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -3467,9 +2265,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-7, 1], "UpperCI" = plc2[-7, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -3482,9 +2277,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-11, 1], "UpperCI" = plc3[-11, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -3502,25 +2294,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[-11, 1], "UpperCI" = plc4[-11, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =   unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
-
 
 ```
 
@@ -3542,8 +2315,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-7, 1], "UpperCI" = plc1[-7, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
 
 AM_0 = glmmTMB(O5 ~ QFT*Time + Gender*Time + (1| ID), data = groupB1, family = Gamma(link = "log"))
 AS_0 = summary(AM_0)
@@ -3553,9 +2324,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-7, 1], "UpperCI" = plc2[-7, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -3569,8 +2337,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-11, 1], "UpperCI" = plc3[-11, 2])
 
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -3588,24 +2354,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[-11, 1], "UpperCI" = plc4[-11, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
 
 
 ```
@@ -3628,9 +2376,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-7, 1], "UpperCI" = plc1[-7, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
-
 AM_0 = glmmTMB(O6 ~ QFT*Time + Gender*Time + (1| ID), data = groupB1, family = Gamma(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -3639,9 +2384,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-7, 1], "UpperCI" = plc2[-7, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -3654,9 +2396,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-11, 1], "UpperCI" = plc3[-11, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -3674,25 +2413,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[-11, 1], "UpperCI" = plc4[-11, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
-
 
 ```
 
@@ -3714,9 +2434,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-7, 1], "UpperCI" = plc1[-7, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
-
 AM_0 = glmmTMB(O7 ~ QFT*Time + Gender*Time + (1| ID), data = groupB1, family = tweedie(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -3725,9 +2442,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-7, 1], "UpperCI" = plc2[-7, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -3740,9 +2454,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-11, 1], "UpperCI" = plc3[-11, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -3760,25 +2471,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[-11, 1], "UpperCI" = plc4[-11, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
-
 
 ```
 
@@ -3801,8 +2493,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[1:6, 1], "UpperCI" = plc1[1:6, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
 
 AM_0 = glmmTMB(O8 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = nbinom1(link = "log"))
 AS_0 = summary(AM_0)
@@ -3812,9 +2502,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[1:6, 1], "UpperCI" = plc2[1:6, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -3833,9 +2520,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[1:10, 1], "UpperCI" = plc3[1:10, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -3860,28 +2544,6 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#length(O)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
-
-
 ```
 
 **%CD14 pMono**:
@@ -3902,10 +2564,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[1:6, 1], "UpperCI" = plc1[1:6, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
-
-##p1 = unname(family_params(AM_0)[1])
 
 AM_0 = glmmTMB(O9 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = tweedie(link = "log"))
 AS_0 = summary(AM_0)
@@ -3915,11 +2573,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[1:6, 1], "UpperCI" = plc2[1:6, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -3932,11 +2585,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[1:10, 1], "UpperCI" = plc3[1:10, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -3954,32 +2602,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[1:10, 1], "UpperCI" = plc4[1:10, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#length(O)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
-
 
 ```
 
@@ -4001,11 +2623,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[1:6, 1], "UpperCI" = plc1[1:6, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
-
-##p1 = unname(family_params(AM_0)[1])
-
 AM_0 = glmmTMB(O10 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = tweedie(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -4014,11 +2631,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[1:6, 1], "UpperCI" = plc2[1:6, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -4031,12 +2643,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[1:10, 1], "UpperCI" = plc3[1:10, 2])
-
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -4054,32 +2660,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[1:10, 1], "UpperCI" = plc4[1:10, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-#p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#length(O)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
-
 
 ```
 
@@ -4103,9 +2683,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[1:6, 1], "UpperCI" = plc1[1:6, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
-
 AM_0 = glmmTMB(O11 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = poisson(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -4114,9 +2691,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[1:6, 1], "UpperCI" = plc2[1:6, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -4129,9 +2703,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[1:10, 1], "UpperCI" = plc3[1:10, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -4149,31 +2720,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[1:10, 1], "UpperCI" = plc4[1:10, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#length(O)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
-
-table(groupA$Feeding, groupA$Gender)
-table(groupB$Feeding, groupB$Gender)
-
-#Elispot, CD4 total inf-g - in common
 
 ```
 
@@ -4195,9 +2741,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[1:6, 1], "UpperCI" = plc1[1:6, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
-
 AM_0 = glmmTMB(O12 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = Gamma(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -4206,9 +2749,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[1:6, 1], "UpperCI" = plc2[1:6, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -4221,9 +2761,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[1:10, 1], "UpperCI" = plc3[1:10, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -4241,27 +2778,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[1:10, 1], "UpperCI" = plc4[1:10, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#length(O)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
-
 
 ```
 
@@ -4283,9 +2799,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[1:6, 1], "UpperCI" = plc1[1:6, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
-
 AM_0 = glmmTMB(O13 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = poisson(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -4294,9 +2807,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[1:6, 1], "UpperCI" = plc2[1:6, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -4309,9 +2819,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[1:10, 1], "UpperCI" = plc3[1:10, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -4329,28 +2836,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[1:10, 1], "UpperCI" = plc4[1:10, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-##O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#length(O)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
-
-
 ```
 
 
@@ -4366,16 +2851,11 @@ AM_0 = glmmTMB(O14 ~ Treatment*Time + Gender*Time + (Time| ID), data = groupB2,
                family = t_family(link = "log"))
 AS_0 = summary(AM_0)
 
-emmeans(AM_0, pairwise~Treatment * Time, adjust = "none")
-
 fc1 = data.frame(AS_0$coefficients$cond)
 fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$coefficients$cond), fc1)
 
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[1:6, 1], "UpperCI" = plc1[1:6, 2])
-
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
 
 AM_0 = glmmTMB(O14 ~ QFT*Time + Gender*Time + (Time| ID), data = groupB2, family = t_family(link = "log"))
 AS_0 = summary(AM_0)
@@ -4385,9 +2865,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[1:6, 1], "UpperCI" = plc2[1:6, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -4400,9 +2877,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[1:10, 1], "UpperCI" = plc3[1:10, 2])
-
-#c3 =   unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -4420,27 +2894,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[1:10, 1], "UpperCI" = plc4[1:10, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#length(O)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
-
 
 ```
 
@@ -4462,9 +2915,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[1:6, 1], "UpperCI" = plc1[1:6, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = #c1[1, ]
-
 AM_0 = glmmTMB(O15 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = poisson(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -4473,9 +2923,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[1:6, 1], "UpperCI" = plc2[1:6, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -4491,9 +2938,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[1:10, 1], "UpperCI" = plc3[1:10, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -4514,28 +2958,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[1:10, 1], "UpperCI" = plc4[1:10, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#length(O)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
-
-
 ```
 
 **%HLADRp CD4 T**:
@@ -4556,10 +2978,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[1:6, 1], "UpperCI" = plc1[1:6, 2])
 
-
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
-
 AM_0 = glmmTMB(O16 ~ QFT*Time + Gender*Time + (Time| ID), data = groupB2, family = Gamma(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -4568,9 +2986,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[1:6, 1], "UpperCI" = plc2[1:6, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -4583,9 +2998,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[1:10, 1], "UpperCI" = plc3[1:10, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -4603,26 +3015,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[1:10, 1], "UpperCI" = plc4[1:10, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#length(O)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
 
 ```
 
@@ -4644,11 +3036,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-7, 1], "UpperCI" = plc1[-7, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
-
-##p1 = unname(family_params(AM_0)[1])
-
 AM_0 = glmmTMB(O17 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = tweedie(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -4657,11 +3044,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-7, 1], "UpperCI" = plc2[-7, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
-
-#p1 = unname(family_params(AM_0)[1])
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -4674,11 +3056,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-11, 1], "UpperCI" = plc3[-11, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
-
-#p3 = unname(family_params(AM_0)[1])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -4696,31 +3073,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[-11, 1], "UpperCI" = plc4[-11, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-
-#c4 = unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 = c(c4[3, ], c4[1, ])
-
-##p4 = unname(family_params(AM_0)[1])
-
-#p_ave = (p1+p2+p3+p4)/4
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-##O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#length(O)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
 
 ```
 
@@ -4742,8 +3094,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[1:6, 1], "UpperCI" = plc1[1:6, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
 
 AM_0 = glmmTMB(O18 ~ QFT*Time + Gender*Time + (Time| ID), data = groupB2, family = Gamma(link = "log"))
 AS_0 = summary(AM_0)
@@ -4753,9 +3103,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[1:6, 1], "UpperCI" = plc2[1:6, 2])
-
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -4768,9 +3115,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[1:10, 1], "UpperCI" = plc3[1:10, 2])
-
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -4788,26 +3132,6 @@ fc4 = cbind(fc4, "LowerCI" = plc4[1:10, 1], "UpperCI" = plc4[1:10, 2])
 OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#length(O)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
 
 ```
 
@@ -4829,9 +3153,6 @@ fc1 = cbind("Outcome" = l, "Group" = "MVA85A", "Coefficient" = row.names(AS_0$co
 plc1 = confint(AM_0, method = "wald", component = "cond")
 fc1 = cbind(fc1, "LowerCI" = plc1[-7, 1], "UpperCI" = plc1[-7, 2])
 
-#c1 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c1 = c1[1, ]
-
 AM_0 = glmmTMB(O19 ~ QFT*Time + Gender*Time + (1| ID), data = groupB2, family = Gamma(link = "log"))
 AS_0 = summary(AM_0)
 
@@ -4841,8 +3162,6 @@ fc2 = cbind("Outcome" = l, "Group" = "QFT", "Coefficient" = row.names(AS_0$coeff
 plc2 = confint(AM_0, method = "wald", component = "cond")
 fc2 = cbind(fc2, "LowerCI" = plc2[-7, 1], "UpperCI" = plc2[-7, 2])
 
-#c2 = unname(AS_0$coefficients$cond[5:6, -c(3, 4)])
-#c2 = c2[1, ]
 
 # Formula, antibiotic is ref for breastfeeding, antibiotic (3)
 # Formula, antibiotic is ref for formula, no antibiotic (1)
@@ -4856,8 +3175,6 @@ fc3 = cbind("Outcome" = l, "Group" = "FA - FA", "Coefficient" = row.names(AS_0$c
 plc3 = confint(AM_0, method = "wald", component = "cond")
 fc3 = cbind(fc3, "LowerCI" = plc3[-11, 1], "UpperCI" = plc3[-11, 2])
 
-#c3 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c3 =  c(c3[3, ], c3[1, ])
 
 # Breastfeeding, antibiotic is ref for breastfeeding, no antibiotic (2)
 # Breastfeeding, antibiotic is ref for formula, antibiotic (0)
@@ -4876,29 +3193,8 @@ OR = rbind(fc1, fc2, fc3, fc4)
 OR = cbind(OR, "Arm" = "B", "Reflected" = FALSE)
 write_excel_csv(OR, file = paste0(l, "_Results.csv"))
 
-
-#c4 =  unname(AS_0$coefficients$cond[7:10, -c(3, 4)])
-#c4 =  c(c4[3, ], c4[1, ])
-
-# Extract coefficient estimates, standard errors, test statistic, random effect SD, residual SD
-
-#tran = "None"
-#fam =AM_0$modelInfo$family$family
-#lin = AM_0$modelInfo$family$link
-
-# Create a string
-    ## Family, Link, Beta, SE, Test Stat, Cov, SE, Test Stat, Int, SE, Test Stat, Ranef, Resid, Index, Disp
-
-#O =  c(tran, fam, lin, c1, c2, c3, c4)
-
-#length(O)
-
-#resB[k,2:16] = O
-
-#resB[k, ]
-
 ```
 
 ```{r writedat, include =FALSE}
-#write_excel_csv(resB, file = "GroupBResults.csv")
+write_excel_csv(resB, file = "GroupBResults.csv")
 ```
