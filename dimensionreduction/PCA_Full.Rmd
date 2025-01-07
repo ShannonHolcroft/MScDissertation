@@ -1,5 +1,5 @@
 ---
-title: "Outcome Selection (Full): Group A and B"
+title: "PCA Only Outcome Selection (Full): Group A and B"
 author: "Shannon Holcroft"
 format: html
 ---
@@ -423,6 +423,8 @@ fa_pca_set = pcnames1
 
 ```
 
+# Multiple Testing Corrections
+
 Assuming that the subsets are independent, we can perform corrections within subsets. Retrieve the fitted models by VOI.
 
 ```{r}
@@ -632,8 +634,6 @@ mvapcares = mvapcares %>% arrange(p.value)
 
 mvapcares$BH = p.adjust(mvapcares$p.value, method = "BH", n = length(mvapcares$p.value))
 mvapcares$BY = p.adjust(mvapcares$p.value, method = "BY", n = length(mvapcares$p.value))
-
-# Reflected outcomes need to be multiplied by -1
 
 # Reflected outcomes need to be multiplied by -1
 
@@ -1216,6 +1216,7 @@ fapcares %>% filter(BH < 0.15)
 
 # Group B
 
+# MVA85A 
 
 Perform a PCA on MVA85A priming input data in Group B. PC1 should be retained.
 
@@ -1286,6 +1287,7 @@ pc1names = as.character(unique(c(pc1dat$name)))
 mva_pca_setB = pc1names
 ```
 
+# Multiple Testing Corrections
 
 Assuming that the subsets are independent, we can perform corrections within subset. Retrieve the fitted models.
 
@@ -1322,16 +1324,16 @@ contrast_list = list(
   
   # Comparisons within Control
   
-  "Control_T2_vs_T1" = setNames(c(1, 0, -1, 0), combination_names),
+  "Control_T2_vs_T1" = setNames(c(-1, 0, 1, 0), combination_names),
   
   # Comparisons within MVA85A
   
-  "MVA85A_T2_vs_T1" = setNames(c(0, 1, 0, -1), combination_names),
+  "MVA85A_T2_vs_T1" = setNames(c(0, -1, 0, 1), combination_names),
   
   # Comparisons between Control and MVA85A
   
-  "T2_Control_vs_MVA85A" = setNames(c(1, -1, 0, 0), combination_names),
-  "T1_Control_vs_MVA85A" = setNames(c(0, 0, 1, -1), combination_names)
+  "T2_Control_vs_MVA85A" = setNames(c(-1, 1, 0, 0), combination_names),
+  "T1_Control_vs_MVA85A" = setNames(c(0, 0, -1, 1), combination_names)
 )
 
 contrast_list
@@ -1362,11 +1364,11 @@ mvapcaresB$BY = p.adjust(mvapcaresB$p.value, method = "BY", n = length(mvapcares
 
 mvapcaresB$expestimate = exp(mvapcaresB$estimate)
 
-mvapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v1.1)
-mvapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v1.2)
-mvapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v1.3)
+mvapcaresB %>% filter(BH < 0.15)
 
 ```
+
+# QFT
 
 Perform a PCA on QFT input data for Group B. One PC is required.
 
@@ -1440,6 +1442,8 @@ qft_pca_setB = pcnames1
 
 ```
 
+# Multiple Testing Corrections
+
 Assuming that the subsets are independent, we can perform corrections within subset. Retrieve the fitted models.
 
 ```{r}
@@ -1487,16 +1491,16 @@ contrast_list = list(
   
   # Comparisons within Negative
   
-  "Negative_T2_vs_T1" = setNames(c(1, 0, -1, 0), combination_names),
+  "Negative_T2_vs_T1" = setNames(c(-1, 0, 1, 0), combination_names),
   
   # Comparisons within Positive
   
-  "Positive_T2_vs_T1" = setNames(c(0, 1, 0, -1), combination_names),
+  "Positive_T2_vs_T1" = setNames(c(0, -1, 0, 1), combination_names),
   
   # Comparisons between Negative and Positive
   
-  "T2_Negative_vs_Positive" = setNames(c(1, -1, 0, 0), combination_names),
-  "T1_Negative_vs_Positive" = setNames(c(0, 0, 1, -1), combination_names)
+  "T2_Negative_vs_Positive" = setNames(c(-1, 1, 0, 0), combination_names),
+  "T1_Negative_vs_Positive" = setNames(c(0, 0, -1, 1), combination_names)
 )
 
 contrast_list
@@ -1536,14 +1540,11 @@ qftpcaresB$BY = p.adjust(qftpcaresB$p.value, method = "BY", n = length(qftpcares
 
 qftpcaresB$expestimate = exp(qftpcaresB$estimate)
 
-qftpcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v2.1)
-qftpcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v2.2)
-qftpcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v2.3)
-qftpcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v2.4)
-qftpcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v2.5)
-qftpcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v2.6)
+qftpcaresB %>% filter(BH < 0.15)
 
 ```
+
+# FA - Group B
 
 Perform a PCA on FA input data. PC1 and PC2 explain sufficient input variance.
 
@@ -1636,6 +1637,8 @@ pcnames1 = as.character(unique(c(pc1dat$name, pc2dat$name)))
 fa_pca_setB = pcnames1
 ```
 
+# Multiple Testing Corrections
+
 Assuming that the subsets are independent, we can perform corrections within subset. Retrieve the fitted models.
 
 ```{r}
@@ -1683,36 +1686,36 @@ contrast_list = list(
   
   # Comparisons within FA0
   
-  "FA0_T2_vs_T1" = setNames(c(1, 0, 0, 0, -1, 0, 0, 0), combination_names),
+  "FA0_T2_vs_T1" = setNames(c(-1, 0, 0, 0, 1, 0, 0, 0), combination_names),
   
   # Comparisons within FA1
   
-  "FA1_T2_vs_T1" = setNames(c(0, 1, 0, 0, 0, -1, 0, 0), combination_names),
+  "FA1_T2_vs_T1" = setNames(c(0, -1, 0, 0, 0, 1, 0, 0), combination_names),
   
   # Comparisons within FA2
   
-  "FA2_T2_vs_T1" = setNames(c(0, 0, 1, 0, 0, 0, -1, 0), combination_names),
+  "FA2_T2_vs_T1" = setNames(c(0, 0, -1, 0, 0, 0, 1, 0), combination_names),
   
   # Comparisons within FA3
   
-  "FA3_T2_vs_T1" = setNames(c(0, 0, 0, 1, 0, 0, 0, -1), combination_names),
+  "FA3_T2_vs_T1" = setNames(c(0, 0, 0, -1, 0, 0, 0, 1), combination_names),
   
   
   # Comparisons between FA0 and FA3
   
-  "T2_FA0_vs_FA3" = setNames(c(1, 0, 0, -1, 0, 0, 0, 0), combination_names),
-  "T1_FA0_vs_FA3" = setNames(c(0, 0, 0, 0, 1, 0, 0, -1), combination_names),
+  "T2_FA0_vs_FA3" = setNames(c(-1, 0, 0, 1, 0, 0, 0, 0), combination_names),
+  "T1_FA0_vs_FA3" = setNames(c(0, 0, 0, 0, -1, 0, 0, 1), combination_names),
   
   # Comparisons between FA0 and FA1
   
-  "T2_FA0_vs_FA1" = setNames(c(1, -1, 0, 0, 0, 0, 0, 0), combination_names),
-  "T1_FA0_vs_FA1" = setNames(c(0, 0, 0, 0, 1, -1, 0, 0), combination_names),
+  "T2_FA0_vs_FA1" = setNames(c(-1, 1, 0, 0, 0, 0, 0, 0), combination_names),
+  "T1_FA0_vs_FA1" = setNames(c(0, 0, 0, 0, -1, 1, 0, 0), combination_names),
   
   
   # Comparisons between FA2 and FA3
   
-  "T2_FA2_vs_FA3" = setNames(c(0, 0, 1, -1, 0, 0, 0, 0), combination_names),
-  "T1_FA2_vs_FA3" = setNames(c(0, 0, 0, 0, 0, 0, 1, -1), combination_names)
+  "T2_FA2_vs_FA3" = setNames(c(0, 0, -1, 1, 0, 0, 0, 0), combination_names),
+  "T1_FA2_vs_FA3" = setNames(c(0, 0, 0, 0, 0, 0, -1, 1), combination_names)
   
   
 )
@@ -1753,13 +1756,7 @@ fapcaresB$BY = p.adjust(fapcaresB$p.value, method = "BY", n = length(fapcaresB$p
 
 fapcaresB$expestimate = exp(fapcaresB$estimate)
 
-fapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v3.1)
-fapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v3.2)
-fapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v3.3)
-fapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v3.4)
-fapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v3.5)
-fapcaresB %>% filter(BH < 0.15) %>% filter(Outcome == v3.6)
-
+fapcaresB %>% filter(BH < 0.15)
 
 ```
 
@@ -1830,439 +1827,3 @@ scale_fill_manual(name = "Selected", breaks = c("FALSE", "TRUE"), values = c("li
 
 ```
 
-## Sex
-
-Apply PCA to standardised regression coefficients for sex and interactions between sex and time points. In Group A, the first PC explains sufficient variance in the standardised regression coefficients. 
-
-```{r}
-mat4.2A = tmelt_4A[, c("Outcome", "Group", "Coefficient", "value")]
-mat4.2A$OutcomeGroup = paste(mat4.2A$Outcome, mat4.2A$Group)
-
-mat4.2B = tmelt_4B[, c("Outcome", "Group", "Coefficient", "value")]
-mat4.2B$OutcomeGroup = paste(mat4.2B$Outcome, mat4.2B$Group)
-
-# Restructure the data frame
-
-mat4.2A_mva = mat4.2A %>% filter(Group == "MVA85A")
-mat4.2A_qft = mat4.2A %>% filter(Group == "QFT")
-mat4.2A_fa = mat4.2A %>% filter(Group %in% c("FA - FA", "FA - BA"))
-
-mat4.2B_mva = mat4.2B %>% filter(Group == "MVA85A")
-mat4.2B_qft = mat4.2B %>% filter(Group == "QFT")
-mat4.2B_fa = mat4.2B %>% filter(Group %in% c("FA - FA", "FA - BA"))
-
-# MVA85A data preparation
-
-mat4.2A_mva_wide = mat4.2A_mva %>%
-  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
-
-mat4.2A2_mva = as.matrix(mat4.2A_mva_wide[, 2:4], nrow = nrow(mat4.2A_mva_wide), ncol = 3)
-row.names(mat4.2A2_mva) = mat4.2A_mva_wide$OutcomeGroup
-
-mat4.2B_mva_wide = mat4.2B_mva %>%
-  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
-
-mat4.2B2_mva = as.matrix(mat4.2B_mva_wide[, 2:3], nrow = nrow(mat4.2B_mva_wide), ncol = 2)
-row.names(mat4.2B2_mva) = mat4.2B_mva_wide$OutcomeGroup
-
-# QFT data preparation
-
-mat4.2A_qft_wide = mat4.2A_qft %>%
-  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
-
-mat4.2A2_qft = as.matrix(mat4.2A_qft_wide[, 2:4], nrow = nrow(mat4.2A_qft_wide), ncol = 3)
-row.names(mat4.2A2_qft) = mat4.2A_qft_wide$OutcomeGroup
-
-mat4.2B_qft_wide = mat4.2B_qft %>%
-  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
-
-mat4.2B2_qft = as.matrix(mat4.2B_qft_wide[, 2:3], nrow = nrow(mat4.2B_qft_wide), ncol = 2)
-row.names(mat4.2B2_qft) = mat4.2B_qft_wide$OutcomeGroup
-
-# FA data preparation
-
-mat4.2A_fa_wide = mat4.2A_fa %>%
-  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
-
-mat4.2A2_fa = as.matrix(mat4.2A_fa_wide[, 2:4], nrow = nrow(mat4.2A_fa_wide), ncol = 3)
-row.names(mat4.2A2_fa) = mat4.2A_fa_wide$OutcomeGroup
-
-mat4.2B_fa_wide = mat4.2B_fa %>%
-  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
-
-mat4.2B2_fa = as.matrix(mat4.2B_fa_wide[, 2:3], nrow = nrow(mat4.2B_fa_wide), ncol = 2)
-row.names(mat4.2B2_fa) = mat4.2B_fa_wide$OutcomeGroup
-```
-
-
-```{r}
-pca4.2Ares = princomp(mat4.2A2_mva, cor = TRUE, scores = TRUE)
-summary(pca4.2Ares) # Component 1 should suffice
-
-fviz_eig(pca4.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
-         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
-         ylim = c(0, 100)) + theme_minimal() +
-theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
-                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
-                                   axis.text.x = element_text(size = 10, family = "Arial"),
-                                   axis.text.y = element_text(size = 10, family = "Arial"))
-
-```
-
-PC1 primarily describes differences prior to BCG.
-
-```{r}
-
-fviz_contrib(pca4.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
-  labs(y = element_text("Contributions(%)\n")) +
-  theme_minimal() +
-  theme(title = element_blank(),
-        axis.title.y = element_text(size = 12, face = "bold"),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
-        axis.text.y = element_text(size = 10))
-
-fviz_contrib(pca4.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 20) +
-  labs(y = element_text("Contributions(%)\n")) +
-  theme_minimal() +
-  theme(title = element_blank(),
-        axis.title.y = element_text(size = 12, face = "bold"),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
-        axis.text.y = element_text(size = 10))
-
-
-```
-
-
-```{r}
-contrib4.2A = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
-
-pc1dat = contrib4.2A$data[which(contrib4.2A$data$contrib >= 5), ]
-
-pcnames1 = as.character(unique(c(pc1dat$name)))
-
-sex_mva_setA = pcnames1
-```
-```{r}
-pca4.2Ares = princomp(mat4.2A2_qft, cor = TRUE, scores = TRUE)
-summary(pca4.2Ares) # Component 1 should suffice
-
-fviz_eig(pca4.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
-         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
-         ylim = c(0, 100)) + theme_minimal() +
-theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
-                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
-                                   axis.text.x = element_text(size = 10, family = "Arial"),
-                                   axis.text.y = element_text(size = 10, family = "Arial"))
-
-```
-
-```{r}
-fviz_contrib(pca4.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
-  labs(y = element_text("Contributions(%)\n")) +
-  theme_minimal() +
-  theme(title = element_blank(),
-        axis.title.y = element_text(size = 12, face = "bold"),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
-        axis.text.y = element_text(size = 10))
-
-fviz_contrib(pca4.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 20) +
-  labs(y = element_text("Contributions(%)\n")) +
-  theme_minimal() +
-  theme(title = element_blank(),
-        axis.title.y = element_text(size = 12, face = "bold"),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
-        axis.text.y = element_text(size = 10))
-```
-
-```{r}
-contrib4.2A = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
-
-pc1dat = contrib4.2A$data[which(contrib4.2A$data$contrib >= 3), ]
-
-pcnames1 = as.character(unique(c(pc1dat$name)))
-
-sex_qft_setA = pcnames1
-```
-
-
-```{r}
-pca4.2Ares = princomp(mat4.2A2_fa, cor = TRUE, scores = TRUE)
-summary(pca4.2Ares) # Component 1 should suffice
-
-fviz_eig(pca4.2Ares, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
-         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
-         ylim = c(0, 100)) + theme_minimal() +
-theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
-                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
-                                   axis.text.x = element_text(size = 10, family = "Arial"),
-                                   axis.text.y = element_text(size = 10, family = "Arial"))
-
-```
-
-```{r}
-fviz_contrib(pca4.2Ares, axes = 1, choice = "var", fill = "darkgrey", color = "black", top = 10) +
-  labs(y = element_text("Contributions(%)\n")) +
-  theme_minimal() +
-  theme(title = element_blank(),
-        axis.title.y = element_text(size = 12, face = "bold"),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 10, angle = 45, vjust = 1, hjust = 1),
-        axis.text.y = element_text(size = 10))
-
-fviz_contrib(pca4.2Ares, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 30) +
-  labs(y = element_text("Contributions(%)\n")) +
-  theme_minimal() +
-  theme(title = element_blank(),
-        axis.title.y = element_text(size = 12, face = "bold"),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 10, angle = 90, vjust = 0, hjust = 1),
-        axis.text.y = element_text(size = 10))
-```
-
-```{r}
-contrib4.2A = fviz_contrib(pca4.2Ares, axes = 1, choice = "ind")
-
-pc1dat = contrib4.2A$data[which(contrib4.2A$data$contrib >= 1.5), ]
-
-pcnames1 = as.character(unique(c(pc1dat$name)))
-
-sex_fa_setA = pcnames1
-```
-
-```{r}
-split_after_match = function(string, matches) {
-  # Create a regex pattern that matches any word in 'matches'
-  pattern <- paste(matches, collapse = "|")
-  
-  # Extract the part before the match
-  outcome = sub(paste0("(.*?)\\s*(", pattern, ").*"), "\\1", string)
-  
-  # Extract the matched word and everything after it
-  group =  sub(paste0(".*?(", pattern, ".*)"), "\\1", string)
-  
-  # Return as a named vector or list for clarity
-  c(Outcome = outcome, Group = group)
-}
-
-# Apply the function to each string
-result = t(sapply(sex_pca_setA, split_after_match, matches = matches))
-
-# Convert to data frame for easy viewing
-sex_df = as.data.frame(result, stringsAsFactors = FALSE)
-
-# View the result
-print(sex_df)
-
-mva_sex_namesA = (sex_df %>% filter(Group == "MVA85A"))
-qft_sex_namesA = sex_df %>% filter(Group == "QFT")
-fa_sex_namesA = unique((sex_df %>% filter(Group %in% c("FA - FA", "FA - BA"))))
-
-# For all VOI
-all_sex_namesA = Reduce(intersect, list(mva_sex_namesA, qft_sex_namesA, fa_sex_namesA))
-str(sex_df)
-find_exclusive_pairs = function(vec1, vec2, exclude_vec) {
-  # Find common elements in vec1 and vec2
-  common <- intersect(vec1, vec2)
-  # Exclude elements that are in exclude_vec
-  setdiff(common, exclude_vec)
-}
-
-# For MVA85A and QFT but not FA
-
-mva_qft_namesA = find_exclusive_pairs(mva_sex_namesA$Outcome, qft_sex_namesA$Outcome, fa_sex_namesA$Outcome)
-
-# For MVA85A and FA but not QFT
-
-mva_fa_namesA = find_exclusive_pairs(mva_sex_namesA$Outcome, fa_sex_namesA$Outcome, qft_sex_namesA$Outcome)
-
-# For QFT and FA but not MVA85A
-
-qft_fa_namesA = find_exclusive_pairs(qft_sex_namesA$Outcome, fa_sex_namesA$Outcome, fa_sex_namesA$Outcome)
-
-find_exclusive = function(target_vec, exclude_vec1, exclude_vec2) {
-  # Combine the two exclusion vectors
-  combined_exclusions <- union(exclude_vec1, exclude_vec2)
-  # Find elements in target_vec that are not in the combined exclusions
-  setdiff(target_vec, combined_exclusions)
-}
-
-# For MVA85A only
-
-mva_namesA = find_exclusive(mva_sex_namesA$Outcome, qft_sex_namesA$Outcome, fa_sex_namesA$Outcome)
-
-# For QFT only
-
-qft_namesA = find_exclusive(qft_sex_namesA$Outcome, mva_sex_namesA$Outcome, fa_sex_namesA$Outcome)
-
-# For FA only
-
-fa_namesA = find_exclusive(fa_sex_namesA$Outcome, mva_sex_namesA$Outcome, qft_sex_namesA$Outcome)
-
-```
-
-```{r}
-
-# Group A set comparison
-
-Aset_list = list(MVA85A = mva_sex_namesA$Outcome, QFT = qft_sex_namesA$Outcome, FA = fa_sex_namesA$Outcome)
-
-# Number per set
-
-length(mva_sex_namesA$Outcome)
-length(qft_sex_namesA$Outcome)
-length(fa_sex_namesA$Outcome)
-
-# Number of unique immune outcomes
-unique(c(mva_sex_namesA$Outcome, qft_sex_namesA$Outcome, fa_sex_namesA$Outcome))
-
-Aresult = sapply(allA, function(x) {
-  sapply(Aset_list, function(vec) as.numeric(x %in% vec))
-})
-
-Aset_res = t(Aresult)
-Amelt = melt(Aset_res)
-colnames(Amelt) = c("Outcome", "Variable", "Indicator")
-Amelt$Indicator = as.logical(Amelt$Indicator)
-
-ggplot(Amelt, aes(x = Variable, y = Outcome, fill = Indicator)) +
-  geom_tile(color = "black") + theme_bw() +
-  theme(axis.text.y = element_text(size=9, family = "TT Arial"),
-        axis.text.x = element_text(size=10, angle = 0, family = "TT Arial", face = "bold"),
-        axis.title.y = element_blank(), axis.title.x = element_blank(), legend.position = "none") +
-scale_fill_manual(name = "Selected", breaks = c("FALSE", "TRUE"), values = c("lightgrey", "darkcyan"))
-
-
-```
-```{r}
-
-# Group B set comparison
-
-Bset_list = list(MVA85A = mva_sex_namesB$Outcome, QFT = qft_sex_namesB$Outcome, FA = fa_sex_namesB$Outcome)
-
-# Number per set
-
-length(mva_sex_namesB$Outcome)
-length(qft_sex_namesB$Outcome)
-length(fa_sex_namesB$Outcome)
-
-# Number of unique immune outcomes
-unique(c(mva_sex_namesA$Outcome, qft_sex_namesA$Outcome, fa_sex_namesA$Outcome))
-
-Aresult = sapply(allA, function(x) {
-  sapply(Aset_list, function(vec) as.numeric(x %in% vec))
-})
-
-Aset_res = t(Aresult)
-Amelt = melt(Aset_res)
-colnames(Amelt) = c("Outcome", "Variable", "Indicator")
-Amelt$Indicator = as.logical(Amelt$Indicator)
-
-ggplot(Amelt, aes(x = Variable, y = Outcome, fill = Indicator)) +
-  geom_tile(color = "black") + theme_bw() +
-  theme(axis.text.y = element_text(size=9, family = "TT Arial"),
-        axis.text.x = element_text(size=10, angle = 0, family = "TT Arial", face = "bold"),
-        axis.title.y = element_blank(), axis.title.x = element_blank(), legend.position = "none") +
-scale_fill_manual(name = "Selected", breaks = c("FALSE", "TRUE"), values = c("lightgrey", "darkcyan"))
-
-
-```
-
-```{r}
-
-mat4.2B = tmelt_4B[, c("Outcome", "Group", "Coefficient", "value")]
-
-# Restructure the data frame
-
-mat4.2B$OutcomeGroup = paste(mat4.2B$Outcome, mat4.2B$Group)
-mat4.2B2 = mat4.2B[, c("OutcomeGroup", "Coefficient", "value")]
-
-mat4.2B2_wide = mat4.2B2 %>%
-  pivot_wider(names_from = Coefficient, id_cols = OutcomeGroup, values_from = value)
-
-mat4.2B2 = as.matrix(mat4.2B2_wide[, 2:3], nrow = nrow(mat4.2B2_wide), ncol = 2)
-row.names(mat4.2B2) = mat4.2B2_wide$OutcomeGroup
-
-pca4.2Bres = princomp(mat4.2B2, cor = TRUE, scores = TRUE)
-summary(pca4.2Bres) # Component 1 should suffice
-
-fviz_eig(pca4.2Bres, addlabels = TRUE, barfill = "darkgrey", barcolor = "black", bar_width = 0.5,
-         xlab = "\n Number of Principal Components", ylab = "Variance Explained (%)\n", main = "",
-         ylim = c(0, 100)) + theme_minimal() +
-theme(axis.title.y = element_text(size = 12, family = "Arial", face = "bold"),
-                                   axis.title.x = element_text(size = 12, family = "Arial", face = "bold"),
-                                   axis.text.x = element_text(size = 10, family = "Arial"),
-                                   axis.text.y = element_text(size = 10, family = "Arial"))
-
-
-```
-
-PC1 has many contributions as the coefficients are measured for each VOI.
-
-```{r}
-
-fviz_contrib(pca4.2Bres, axes = 1, choice = "ind", fill = "darkgrey", color = "black", top = 50) +
-  labs(y = element_text("Contributions(%)\n")) +
-  theme_minimal() +
-  theme(title = element_blank(),
-        axis.title.y = element_text(size = 12, face = "bold"),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 8, angle = 90, vjust = 0, hjust = 1),
-        axis.text.y = element_text(size = 10))
-
-```
-```{r}
-contrib4.2B = fviz_contrib(pca4.2Bres, axes = 1, choice = "ind")
-
-pc1dat = contrib4.2B$data[which(contrib4.2B$data$contrib >= 2.1), ]
-
-pcnames1 = as.character(unique(c(pc1dat$name)))
-
-sex_pca_setB = pcnames1
-
-matches = unique(mat4.2B$Group)
-
-# Apply the function to each string
-result = t(sapply(sex_pca_setB, split_after_match, matches = matches))
-
-# Convert to data frame for easy viewing
-sex_dfB = as.data.frame(result, stringsAsFactors = FALSE)
-
-# View the result
-print(sex_dfB)
-
-mva_sex_namesB = sex_dfB %>% filter(Group == "MVA85A")
-qft_sex_namesB = sex_dfB %>% filter(Group == "QFT") 
-fa_sex_namesB = sex_dfB %>% filter(Group %in% c("FA - FA", "FA - BA"))
-
-# For all VOI
-all_sex_namesB = Reduce(intersect, list(mva_sex_namesB, qft_sex_namesB, fa_sex_namesB))
-
-# For MVA85A and QFT but not FA
-
-mva_qft_namesB = find_exclusive_pairs(mva_sex_namesB$Outcome, qft_sex_namesB$Outcome, fa_sex_namesB$Outcome)
-
-# For MVA85A and FA but not QFT
-
-mva_fa_namesB = find_exclusive_pairs(mva_sex_namesB$Outcome, fa_sex_namesB$Outcome, qft_sex_namesB$Outcome)
-
-# For QFT and FA but not MVA85A
-
-qft_fa_namesB = find_exclusive_pairs(qft_sex_namesB$Outcome, fa_sex_namesB$Outcome, fa_sex_namesB$Outcome)
-
-# For MVA85A only
-
-mva_namesB = find_exclusive(mva_sex_namesB$Outcome, qft_sex_namesB$Outcome, fa_sex_namesB$Outcome)
-
-# For QFT only
-
-qft_namesB = find_exclusive(qft_sex_namesB$Outcome, mva_sex_namesB$Outcome, fa_sex_namesB$Outcome)
-
-# For FA only
-
-fa_namesB = find_exclusive(fa_sex_namesB$Outcome, mva_sex_namesB$Outcome, qft_sex_namesB$Outcome)
-
-```
