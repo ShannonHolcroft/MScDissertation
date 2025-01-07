@@ -3,6 +3,11 @@
 library(readxl)
 library(tidyverse)
 library(ggplot2)
+library(xtable)
+library(kableExtra)
+library(dplyr)
+library(reshape2)
+library(knitr)
 
 # Read in group data
 
@@ -41,6 +46,10 @@ groupB$FA = factor(groupB$FA)
 groupA = rename_with(.data = groupA, .fn = ~ paste0("O", 1:length(varA)), .cols = 17:56)
 groupB = rename_with(.data = groupB, .fn = ~ paste0("O", 1:length(varB)), .cols = 16:34)
 
+# Which IDs are QFT indeterminate?
+groupA[which(groupA$QFT == "Indeterminate"), ]$ID
+groupB[which(groupB$QFT == "Indeterminate"), ]$ID
+
 # Drop indeterminate QFT observations
 indet_idsA = groupA[which(groupA$QFT == "Indeterminate"), ]$ID
 indet_idsB = groupB[which(groupB$QFT == "Indeterminate"), ]$ID
@@ -48,16 +57,44 @@ indet_idsB = groupB[which(groupB$QFT == "Indeterminate"), ]$ID
 groupA = groupA[-which(groupA$ID %in% indet_idsA), ]
 groupB = groupB[-which(groupB$ID %in% indet_idsB), ]
 
+# Missing values
 
+# Define a function to summarise missingness
 
+check_complete_measurements <- function(data, id_col, time_col, vars_range) {
+  # Ensure the time column is treated as a factor explicitly
+  data <- data %>%
+    mutate(across(all_of(time_col), as.factor))
+  
+  # Group by time points and check complete cases for the variable range
+  results <- data %>%
+    group_by(.data[[time_col]]) %>%
+    summarise(
+      CompletePatients = n_distinct(.data[[id_col]][complete.cases(data[vars_range])]),
+      .groups = "drop"
+    )
+  
+  return(results)
+}
 
-# Load packages
+# Outcomes
 
-library(xtable)
-library(kableExtra)
-library(dplyr)
-library(reshape2)
-library(knitr)
+# Specify the ID column and the columns to check
+
+id_col = "ID"
+time_col = "Time"
+vars_range = colnames(groupA[, 18:56])
+
+# Call the function
+missing_counts = check_complete_measurements(groupA, id_col, time_col, cols_range)
+
+# Print the results
+print(missing_counts)
+
+length(unique(groupA$ID))
+length(unique(groupB$ID))
+
+# Complete trajectories
 
 # Keep only the first observation per patient - variables of interest do not change over time, only immune outcomes
 
@@ -349,7 +386,7 @@ varB = varB[-(1:7)]
 
 # Separate data by outcome; removing GrL+ responses and infrequently observed outcomes
 
-outA = groupA[, -c(1:17, 26, 27, 28, 44, 49, 54, 57)]
+outA = groupA[, -c(1:17, 26, 27, 28, 44, 49, 54)]
 colnames(outA) = varA
 outB = groupB[, c(23:34)]
 colnames(outB) = varB
@@ -436,12 +473,12 @@ dev.off()
 
 # Set up the grid
 
-par(mfrow = c(4, 4))
+par(mfrow = c(3, 4))
 
-histA = vector("list", length = 33)
+histA = vector("list", length = 16)
 
 
-for (i in 1:33) {
+for (i in 17:33) {
   input = as.numeric(unlist(outA[, i]))
   d = hist(input, xlab = "", main = paste0(varA[i]))
   histA[[i]] = d
@@ -458,5 +495,3 @@ for (i in 1:12) {
   d = hist(input, xlab = "", main = paste0(varB[i]))
   histB[[i]] = d
 }
-
-cite(emmeans)
